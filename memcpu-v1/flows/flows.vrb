@@ -1,0 +1,17 @@
+\frametitle{Problem P2}
+\begin{verbatim}
+init
+{
+  next[0] = false;  next[1] = false;
+  next[2] = false;  next[3] = false;
+  listener[0] = false;  listener[1] = false;
+  listener[2] = false;  listener[3] = false;
+
+  atomic { run addListener(); run addListener();
+           run addListener(); run addListener(); };
+
+  (_nr_pr==1) ->
+            assert(listener[0] && ... && listener[3]);
+}
+\end{verbatim}
+

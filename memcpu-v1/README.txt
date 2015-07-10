@@ -1,0 +1,3 @@
+This version contains fixes for out of order messages such that their arrival may cause some processes to prematurely generate some messages.  This happens in the  cpu_req_in_mmio_rd_handler thread in busctrl.cpp.
+
+In this version, each message is assigned with a unique source ID, which is the source originating a flow.  This ID remains constant for all messages involved in the flow.  This mechanism is based on the assumption that each flow has only one originating agent. 

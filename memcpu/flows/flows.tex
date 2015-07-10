@@ -1,0 +1,269 @@
+\documentclass[slidetop=slidecentered,xcolor=dvipsnames,12pt,graphics]{beamer}
+
+\let\Tiny=\tiny
+
+\usepackage{beamerthemesplit}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{fancybox}
+\usepackage{color}
+\usepackage{multirow} %used for crazy tables
+\usepackage{stmaryrd} %used for /shortrightarrow
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,calc,automata,positioning}
+
+%\usetheme{AnnArbor}
+%\usetheme{Bergen}
+%\usetheme{Antibes}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}+
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}+
+%\usetheme{Szeged}
+%\usetheme{Warsaw}+
+%\usetheme{boxes}+
+%\usetheme{default}
+%\usefonttheme{serif}
+%\usecolorheme{albatross} 
+\usecolortheme[RGB={0,100,0}]{structure} 
+\setbeamertemplate{items}[circle] 
+\setbeamertemplate{navigation symbols}{} 
+%\setbeamerfont{structure}{family=\rmfamily,shape=\bfshape} 
+\setbeamerfont{structure}{series=\bfseries} 
+%\setbeamertemplate{background canvas}{\includegraphics[width=50mm,height=50mm]{usf-logo.eps}}
+\setbeamersize{text margin left=4mm, text margin right=4mm} 
+\useoutertheme{infolines} 
+
+
+\title[flows]{Flow Specificaitons}
+%\subtitle{Homework Solutions}
+
+
+\author[H. Zheng]{Hao Zheng}
+
+\institute[CSE USF]{Department of Computer Science and Engineering \\
+University of South Florida}
+
+\date[]{}
+
+\newcounter{slide}
+\setcounter{slide}{1}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}[c]\frametitle{Upstream Message Signaled Interrupts (MSI)}
+
+\tikzstyle{format} = [draw, thin, fill=blue!20]
+\tikzstyle{medium} = [ellipse, draw, thin, fill=green!20, minimum height=2.5em]
+
+\begin{figure}
+\begin{tikzpicture}[node distance=3cm, auto,>=latex', thick]
+\tikzset{tran/.style={rectangle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+\tikzset{place/.style={circle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+	
+	\node[place,fill=gray!30]	(start)		at	(0,0) {$0$};
+	\node[tran] 	(tran1)		at	($(start)+(4,0)$) {GFX:SSA:WR:INTR};
+	\node[place] 	(place1) 	at ($(tran1) + (4,0)$ ) {1};
+	\node[tran] 	(tran2) 		at ($(place1) + (0,-1.5)$ ) {SSA:CPU:MSI:$-$};
+	\node[place] 	(place2) 	at ($(tran2) + (0,-1.5)$) {2};
+	\node[tran] 	(tran3) 		at ($(place2) + (-4,0)$) {CPU:SSA:ReplyMiss:$-$};
+	\node[place] 	(end)	 		at ($(tran3) + (-4,0)$) {3};
+
+	
+  
+  	\draw [->] (start) -- (tran1);
+  	\draw [->] (tran1) -- (place1);
+  	\draw [->] (place1) -- (tran2);
+  	\draw [->] (tran2) -- (place2);
+  	\draw [->] (place2) -- (tran3);
+  	\draw [->] (tran3) -- (end);
+  \end{tikzpicture}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}[c]\frametitle{Upstream Memory Write}
+\tikzstyle{format} = [draw, thin, fill=blue!20]
+\tikzstyle{medium} = [ellipse, draw, thin, fill=green!20, minimum height=2.5em]
+
+	\begin{center}
+\resizebox{!}{3in}{
+	\begin{tikzpicture}[node distance=3cm, auto,>=latex', thick]
+		\tikzset{tran/.style={rectangle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+		\tikzset{place/.style={circle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+	
+		\node[place,fill=gray!30]	(start)		at	(0,0) {$0$};
+		\node[tran] 	(tran1)		at	($(start)+(0,-1.5)$) {GFX:SSA:WR:DMEM};
+		\node[place] 	(place1) 	at ($(tran1) + (0,-1.5)$ ) {1};
+		\node[place] 	(place2) 	at ($(tran1) + (4,0)$ ) {2};
+		\node[tran] 	(tran2) 		at ($(place1) + (0,-1.5)$ ) {SSA:CPU:WR:DMEM};
+		\node[place] 	(place3) 	at ($(tran2) + (0,-1.5)$) {3};
+		\node[tran] 	(tran3) 		at ($(place3) + (0,-1.5)$) {CPU:SSA:ReplyHit:$-$};
+		\node[place] 	(place4)	 	at ($(tran3) + (0,-1.5)$) {4};
+		\node[tran] 	(tran4) 		at ($(place4) + (8,0)$) {CPU:SSA:DataValid:$-$};
+		\node[tran] 	(tran5) 		at ($(place3) + (4,0)$) {CPU:SSA:ReplyMiss:$-$};
+		\node[place] 	(place5) 	at ($(tran5) + (4,0)$) {5};
+		\node[tran] 	(tran6) 		at ($(place2) + (4,0)$) {GFX:SSA:DataValid:$-$};
+		\node[place] 	(place6) 	at ($(tran6) + (0,-1.5)$) {6};
+		\node[tran] 	(tran7) 		at ($(place6) + (0,-1.5)$) {SSA:DUNIT:DataValid:$-$};
+		\node[place] 	(end) 		at ($(tran7) + (4,0)$) {7};
+
+  		\draw [->] (start) -- (tran1);
+  		\draw [->] (tran1) -- (place1);
+  		\draw [->] (tran1) -- (place2);
+  		\draw [->] (place1) -- (tran2);
+  		\draw [->] (tran2) -- (place3);
+  		\draw [->] (place3) -- (tran3);
+  		\draw [->] (tran3) -- (place4);
+  		\draw [->] (place4) -- (tran4);
+  		\draw [->] (place3) -- (tran5);
+  		\draw [->] (tran4) -- (place5);
+ 	 	\draw [->] (tran5) -- (place5);
+		\draw [->] (place2) -- (tran6);
+ 	 	\draw [->] (tran6) -- (place6);
+		\draw [->] (place5) -- (tran7);
+		\draw [->] (place6) -- (tran7);
+		\draw [->] (tran7) -- (end);
+  \end{tikzpicture}
+}	
+	\end{center}
+\end{frame}
+
+
+\begin{frame}[c]\frametitle{Upstream Memory Read}
+\tikzstyle{format} = [draw, thin, fill=blue!20]
+\tikzstyle{medium} = [ellipse, draw, thin, fill=green!20, minimum height=2.5em]
+
+	\begin{center}
+\resizebox{4.8in}{!}{
+	\begin{tikzpicture}[node distance=3cm, auto,>=latex', thick]
+		\tikzset{tran/.style={rectangle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+		\tikzset{place/.style={circle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+	
+		\node[place,fill=gray!30]	(start)		at	(0,0) {$0$};
+		\node[tran] 	(tran1)		at	($(start)+(0,-1.5)$) {GFX:SSA:RD:DMEM};
+		\node[place] 	(place1) 	at ($(tran1) + (0,-1.5)$ ) {1};
+		\node[place] 	(place6) 	at ($(tran1) + (6,0)$ ) {6};
+		\node[tran] 	(tran2) 		at ($(place1) + (0,-1.5)$ ) {SSA:CPU:RD:DMEM};
+		\node[place] 	(place2) 	at ($(tran2) + (0,-1.5)$) {2};
+		\node[tran] 	(tran3) 		at ($(place3) + (0,-1.5)$) {CPU:SSA:ReplyHit:$-$};
+		\node[place] 	(place3)	 	at ($(tran3) + (0,-1.5)$) {3};
+		\node[tran] 	(tran4) 		at ($(place3) + (0,-1.5)$) {CPU:SSA:DataValid:$-$};
+		\node[tran] 	(tran5) 		at ($(place2) + (4,0)$) {CPU:SSA:ReplyMiss:$-$};
+		\node[place] 	(place4) 	at ($(tran5) + (4,0)$) {4};
+		\node[tran] 	(tran8) 		at ($(place6) + (6,0)$) {SSA:DUNIT:RD:DMEM};
+		\node[place] 	(place7) 	at ($(tran8) + (6,0)$) {7};
+		\node[tran] 	(tran9) 		at ($(place7) + (0,-1.5)$) {DUNIT:SSA:DataValid:$-$};
+		\node[place] 	(place8) 	at ($(tran9) + (0,-1.5)$) {8};
+		\node[tran] 	(tran6) 		at ($(place4) + (0,-2.5)$) {SSA:GFX:DataValid:$-$};
+		\node[place] 	(place5) 	at ($(tran6) + (0,-1.5)$) {5};
+		\node[tran] 	(tran7) 		at ($(place5) + (0,-1.5)$) {SSA:DUNIT:DataValid:$-$};
+		\node[tran] 	(tran10) 		at ($(place8) + (0,-4)$) {SSA:GFX:DataValid:$-$};
+		\node[place] 	(place9) 	at ($(tran10) + (0,-1.5)$) {9};
+		\node[tran] 	(tran11) 		at ($(place9) + (0,-1.5)$) {SSA:DUNIT:DataValid:$-$};
+		\node[place] 	(end) 	at ($(tran7) + (5,0)$) {10};
+
+  		\draw [->] (start) -- (tran1);
+ 		\draw [->] (tran1) -- (place1);
+  		\draw [->] (tran1) -- (place6);
+  		\draw [->] (place1) -- (tran2);
+  		\draw [->] (tran2) -- (place2);
+  		\draw [->] (place2) -- (tran3);
+  		\draw [->] (place2) -- (tran5);
+  		\draw [->] (tran3) -- (place3);
+  		\draw [->] (place3) -- (tran4);
+  		\draw [->] (tran4) -- (place4);
+  		\draw [->] (tran5) -- (place4);
+ 	 	\draw [->] (place6) -- (tran8);
+		\draw [->] (tran8) -- (place7);
+ 	 	\draw [->] (place7) -- (tran9);
+		\draw [->] (tran9) -- (place8);
+		\draw [->] (place4) -- (tran6);
+		\draw [->] (tran6) -- (place5);
+		\draw [->] (place5) -- (tran7);
+		\draw [->] (tran7) -- (end);
+		\draw [->] (place4) -- ($(tran10)+(-1.5, 2.5)$) -- ($(tran10.north)+(-1.5,0)$);
+		\draw [->] (place8) -- (tran10);
+		\draw [->] (tran10) -- (place9);
+		\draw [->] (place9) -- (tran11);
+		\draw [->] (tran11) -- (end);
+		\draw [->] (place8) -- ($(tran6)+(1.5,4)$) -- ($(tran6.north)+(1.5,0)$);
+  \end{tikzpicture}
+}	
+	\end{center}
+\end{frame}
+
+
+
+\begin{frame}[c]\frametitle{Downstream MMIO Read}
+\tikzstyle{format} = [draw, thin, fill=blue!20]
+\tikzstyle{medium} = [ellipse, draw, thin, fill=green!20, minimum height=2.5em]
+
+	\begin{center}
+\resizebox{!}{3in}{
+	\begin{tikzpicture}[node distance=3cm, auto,>=latex', thick]
+		\tikzset{tran/.style={rectangle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+		\tikzset{place/.style={circle, draw, thick, minimum size=8mm, rounded corners=3mm}}
+	
+		\node[place,fill=gray!30]	(start)		at	(0,0) {$0$};
+		\node[tran] 	(tran1)		at	($(start)+(0,-1.5)$) {CPU:SSA:RD:MMIO};
+		\node[place] 	(place1) 	at ($(tran1) + (-4,0)$ ) {1};
+		\node[place] 	(place2) 	at ($(tran1) + (4,0)$ ) {2};
+		\node[tran] 	(tran2) 		at ($(place1) + (0,-1.5)$ ) {SSA:CPU:RD:MMIO};
+		\node[place] 	(place3) 	at ($(tran2) + (0,-1.5)$) {3};
+		\node[tran] 	(tran3) 		at ($(place3) + (0,-1.5)$) {CPU:SSA:ReplyMIss:$-$};
+		\node[place] 	(place5)	 	at ($(tran3) + (0,-1.5)$) {5};
+		\node[tran] 	(tran4) 		at ($(place2) + (0,-1.5)$) {SSA:GFX:RD:MMIO};
+		\node[place] 	(place4) 	at ($(tran4) + (0,-1.5)$) {4};
+		\node[tran] 	(tran5) 		at ($(place4) + (0,-1.5)$) {GFX:SSA:DataValid:$-$};
+		\node[place] 	(place6) 	at ($(tran5) + (0,-1.5)$) {6};
+		\node[tran] 	(tran6) 		at ($(place6) + (-4,0)$) {SSA:CPU:DataValid:$-$};
+		\node[place] 	(end) 		at ($(tran6) + (0,-1.5)$) {7};
+
+  		\draw [->] (start) -- (tran1);
+  		\draw [->] (tran1) -- (place1);
+  		\draw [->] (tran1) -- (place2);
+  		\draw [->] (place1) -- (tran2);
+  		\draw [->] (tran2) -- (place3);
+  		\draw [->] (place3) -- (tran3);
+  		\draw [->] (tran3) -- (place5);
+  		\draw [->] (place5) -- (tran6);
+		\draw [->] (place2) -- (tran4);
+ 	 	\draw [->] (tran4) -- (place4);
+		\draw [->] (place4) -- (tran5);
+		\draw [->] (tran5) -- (place6);
+		\draw [->] (place6) -- (tran6);
+		\draw [->] (tran6) -- (end);
+  \end{tikzpicture}
+}	
+	\end{center}
+\end{frame}
+
+
+\end{document}
