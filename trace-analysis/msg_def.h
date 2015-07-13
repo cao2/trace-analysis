@@ -10,22 +10,27 @@ typedef uint32_t config_t;
 const config_t null_cfg = 0;
 
 // Define indices for components.
-const uint16_t CPU = 1;
-const uint16_t SSA = 2;
-const uint16_t GFX = 3;
-const uint16_t DUNIT = 4;
-string blk_vector[5] = {"-", "CPU", "SSA", "GFX", "DUNIT"};
+const uint16_t cpu0 = 1;
+const uint16_t cache0 = 2;
+const uint16_t cpu1 = 3;
+const uint16_t cache1 = 4;
+const uint16_t membus = 5;
+const uint16_t mem = 6;
+string blk_vector[7] = {"-", "cpu0", "cache0", "cpu1", "cache1", "membus","mem"};
 
 // Define commands
 typedef uint16_t command_t;
-const command_t NOCMD = 0;
-const command_t RD = 1;
-const command_t WR = 2;
-const command_t DataValid = 3;
-const command_t ReplyHit = 4;
-const command_t ReplyMiss = 5;
-const command_t MSI = 6;
-string cmd_vector[7] = {"-", "RD", "WR", "DataValid", "ReplyHit", "ReplyMiss", "MSI"};
+const command_t readreq = 0;
+const command_t readres = 1;
+const command_t writereq = 2;
+const command_t writeres = 3;
+const command_t readExreq = 4;
+const command_t readExres = 5;
+const command_t storeCondreq = 6;
+const command_t storeCondres = 7;
+const command_t Upgradereq = 8;
+const command_t Upgraderes = 9;
+string cmd_vector[11] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq"};
 
 // Define the ranges of memory address spaces.
 typedef uint32_t address_t;
@@ -101,4 +106,3 @@ public:
 };
 
 #endif
-

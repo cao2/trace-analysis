@@ -1,0 +1,13 @@
+848000:4:		:cpu1:icache1:Timing:readreq:528728
+849000:64:		:1dcache:membus:Timing:StoreCondreq:528728
+849000:64:		:membus:mem:Timing:StoreCondreq:528728
+849000:197634:		:dcache0:cpu0:Timing:StoreCondreq:528728
+849000:197635:		:membus:icache0:Timing:StoreCondreq:528728
+849000:197636:		:icache0:cpu0:Timing:StoreCondreq:528728
+849000:197637:		:membus:dcache0:Timing:StoreCondreq:528728
+849000:197638:		:dcache1:cpu1:Timing:StoreCondreq:528728
+849000:197639:		:membus:icache1:Timing:StoreCondreq:528728
+985250:197650:		:mem:membus:Timing:readres:528728
+1006000:197651:		:membus:dcache1:Timing:readres:528728
+1007000:197652:		:icache1:cpu1:Timing:readres:528728
+

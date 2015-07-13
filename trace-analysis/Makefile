@@ -24,4 +24,4 @@ analysis.o: msg_def.h lpn.h analysis.cc
 
 
 clean:
-	rm *.o test
+	rm *.o
