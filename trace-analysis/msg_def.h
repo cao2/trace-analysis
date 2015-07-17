@@ -20,16 +20,16 @@ string blk_vector[7] = {"-", "cpu0", "cache0", "cpu1", "cache1", "membus","mem"}
 
 // Define commands
 typedef uint16_t command_t;
-const command_t readreq = 0;
-const command_t readres = 1;
-const command_t writereq = 2;
-const command_t writeres = 3;
-const command_t readExreq = 4;
-const command_t readExres = 5;
-const command_t storeCondreq = 6;
-const command_t storeCondres = 7;
-const command_t Upgradereq = 8;
-const command_t Upgraderes = 9;
+const command_t readreq = 1;
+const command_t readres = 2;
+const command_t writereq = 3;
+const command_t writeres = 4;
+const command_t readExreq = 5;
+const command_t readExres = 6;
+const command_t storeCondreq = 7;
+const command_t storeCondres = 8;
+const command_t Upgradereq = 9;
+const command_t Upgraderes = 10;
 string cmd_vector[11] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq"};
 
 // Define the ranges of memory address spaces.

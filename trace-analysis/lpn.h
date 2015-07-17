@@ -61,8 +61,22 @@ public:
 
     
     config_t accept(const message_t& other, const config_t& cfg) const {
+        /**
+        cout<<"name "<<name<<endl;
+        cout<<"src "<<other.src<<endl;
+        cout<<"dest "<<other.dest<<endl;
+        cout<<"pre "<<cfg<<endl;
+        cout<<"cmd "<<other.cmd<<endl;
+        cout<<"now start comparing;"<<endl;
+        **/
         for (unsigned i=0; i<msg_vector.size(); i++) {
             const message_t& msg = msg_vector.at(i);
+            //cout<<i<<endl;
+            //cout<<"src "<<msg.src<<endl;
+            //cout<<"dest "<<msg.dest<<endl;
+            //cout<<"pre "<<msg.pre_cfg<<endl;
+            //cout<<"cmd "<<msg.cmd<<endl;
+            //out<<endl;
             if (msg.src == other.src && msg.dest == other.dest && msg.cmd == other.cmd && msg.addr == other.addr && ((cfg & msg.pre_cfg) == msg.pre_cfg)) {
                 if ((cfg & ~msg.pre_cfg & msg.post_cfg) != 0) {
                     cout << bitset<12>(cfg) << endl
@@ -70,6 +84,7 @@ public:
                     << bitset<12>(msg.post_cfg) << endl;
                     assert(false);
                 }
+                cout<<"find corresponding one"<<endl;
                 return (cfg & ~msg.pre_cfg) | msg.post_cfg;
             }
         }
