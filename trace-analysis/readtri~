@@ -10,4 +10,15 @@
 985250:197650:		:mem:membus:Timing:readres:528728
 1006000:197651:		:membus:dcache1:Timing:readres:528728
 1007000:197652:		:icache1:cpu1:Timing:readres:528728
-
+2496000:4:		:cpu1:icache1:Timing:writereq:1036040
+2497000:64:		:dcache1:membus:Timing:readEXreq:1036040
+2497000:64:		:membus:mem:Timing:readEXreq:1036040
+2497000:197908:		:membus:icache0:Timing:readEXreq:1036040
+2497000:197909:		:dcache0:cpu0:Timing:readEXreq:1036040
+2497000:197910:		:membus:dcache0:Timing:readEXreq:1036040
+2497000:197911:		:icache0:cpu0:Timing:readEXreq:1036040
+2497000:197912:		:membus:icache1:Timing:readEXreq:1036040
+2497000:197913:		:dcache1:cpu1:Timing:readEXreq:1036040
+2633250:197926:		:mem:membus:Timing:readExres:1036040
+2654000:197927:		:membus:dcache1:Timing:readExres:1036040
+2655000:197928:		:icache1:cpu1:Timing:writeres:1036040
