@@ -44,8 +44,7 @@ public:
     }
     
     config_t accept(const message_t& other) const {
-        for (unsigned i=0; i<msg_vector.size(); i++) {
-            const message_t& msg = msg_vector.at(i);
+            const message_t& msg = msg_vector.at(0);
             /*cout << "new message = " << other.toString() << "\t"
             << "spec message = " << msg.toString() << "  " << msg.pre_cfg << " " <<init_cfg << endl;
             if (msg.src == other.src && msg.dest == other.dest&& msg.cmd == other.cmd){// && msg.addr == other.addr) {
@@ -55,8 +54,7 @@ public:
             */
             if (msg.src == other.src && msg.dest == other.dest && msg.cmd == other.cmd && msg.addr == other.addr && ((init_cfg & msg.pre_cfg) == msg.pre_cfg))
                 return msg.post_cfg;
-        }
-        return null_cfg;
+                return null_cfg;
     }
 
     
@@ -77,14 +75,13 @@ public:
             //cout<<"pre "<<msg.pre_cfg<<endl;
             //cout<<"cmd "<<msg.cmd<<endl;
             //out<<endl;
-            if (msg.src == other.src && msg.dest == other.dest && msg.cmd == other.cmd && msg.addr == other.addr && ((cfg & msg.pre_cfg) == msg.pre_cfg)) {
+            if (msg.src == other.src && msg.dest == other.dest && msg.cmd == other.cmd  && ((cfg & msg.pre_cfg) == msg.pre_cfg)) {
                 if ((cfg & ~msg.pre_cfg & msg.post_cfg) != 0) {
                     cout << bitset<12>(cfg) << endl
                         << bitset<12>(msg.pre_cfg) << endl
                     << bitset<12>(msg.post_cfg) << endl;
                     assert(false);
                 }
-                cout<<"find corresponding one"<<endl;
                 return (cfg & ~msg.pre_cfg) | msg.post_cfg;
             }
         }

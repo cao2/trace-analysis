@@ -6,7 +6,7 @@
 
 using namespace std;
 
-typedef uint32_t config_t;
+typedef uint64_t config_t;
 const config_t null_cfg = 0;
 
 // Define indices for components.
@@ -30,7 +30,9 @@ const command_t storeCondreq = 7;
 const command_t storeCondres = 8;
 const command_t Upgradereq = 9;
 const command_t Upgraderes = 10;
-string cmd_vector[11] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq"};
+const command_t loadLockedreq=11;
+const command_t loadLockedres=12;
+string cmd_vector[13] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq","loadLockedreq","loadLockedres"};
 
 // Define the ranges of memory address spaces.
 typedef uint32_t address_t;
