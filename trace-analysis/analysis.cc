@@ -7,7 +7,6 @@
 #include <set>
 #include <algorithm>    // std::sort
 #include <math.h>
-
 // build a lpn model for each flow.
 lpn_t* build_msi_flow_v1(void);
 lpn_t* build_cpu0_read(void);
@@ -213,7 +212,8 @@ int main(int argc, char *argv[]) {
     flow_inst_cnt.push_back(0);
     flow_inst_cnt.push_back(0);
     
-    
+    ofstream errorfile;
+    errorfile.open ("erromsg.txt",ios::trunc);
     
     vector<message_t> trace;
     
@@ -421,7 +421,6 @@ int main(int argc, char *argv[]) {
                     scenario_t new_scenario = scenario;
 
                     string cfg_str=cfg_str_c(new_cfg);
-                    cout<<flow_index<<" :"<<cfg_str<<endl;
                     if(cfg_str=="16" ||cfg_str=="17" || cfg_str=="31")
                     {
                         if(flow_index==0)
@@ -432,7 +431,6 @@ int main(int argc, char *argv[]) {
                             new_scenario.write1++;
                         else if(flow_index==3)
                             new_scenario.read1++;
-                        cout<<"add new to :"<<flow_index<<endl;
                         new_scenario.active_t.erase(new_scenario.active_t.begin()+i);
                     }
                     
@@ -468,18 +466,22 @@ int main(int argc, char *argv[]) {
         }
         
         if (match == false) {
+            tri_stack.push(tri+1);
             cout << "Info: " << trace.at(tri).toString() << " not matched, backtrack." << endl;
             pair< vector<scenario_t>,uint32_t> tmp_bad;
             tmp_bad.first=tmp_s_stack;
             tmp_bad.second=tri;
             bad_scenario_vec.push_back(tmp_bad);
-            break;
+            //break;
+            errorfile<<trace.at(tri).toString()<<"line #:"<<tri<<"\n";
+            
         }
         else{
             s_stack=new_s_stack;
         }
         cout << "======================================" << endl;
     }
+    errorfile.close();
     if (s_stack.size() > 0) {
         cout << endl
         << "***  Success -  the scenario that matches all messages is" << endl;
