@@ -11,12 +11,14 @@ const config_t null_cfg = 0;
 
 // Define indices for components.
 const uint16_t cpu0 = 1;
-const uint16_t cache0 = 2;
+const uint16_t icache0 = 2;
 const uint16_t cpu1 = 3;
-const uint16_t cache1 = 4;
+const uint16_t icache1 = 4;
 const uint16_t membus = 5;
 const uint16_t mem = 6;
-string blk_vector[7] = {"-", "cpu0", "cache0", "cpu1", "cache1", "membus","mem"};
+const uint16_t dcache0=7;
+const uint16_t dcache1=8;
+string blk_vector[9] = {"-", "cpu0", "icache0", "cpu1", "icache1", "membus","mem","dcache0","dcache1"};
 
 // Define commands
 typedef uint16_t command_t;
