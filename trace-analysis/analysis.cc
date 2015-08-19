@@ -14,7 +14,8 @@ lpn_t* build_cpu1_read(void);
 lpn_t* build_us_mem_rd_flow_v1(void);
 lpn_t* build_cpu0_dread(void);
 lpn_t* build_cpu1_dread(void);
-
+lpn_t* build_cpu0_storefail(void);
+lpn_t* build_cpu1_storefail(void);
 struct flow_instance_t
 {
     lpn_t* flow_inst;
@@ -49,6 +50,8 @@ struct scenario_t{
     uint32_t write1;
     uint32_t read0d;
     uint32_t read1d;
+    uint32_t fail0;
+    uint32_t fail1;
     uint32_t total_inactive;
     vector<flow_instance_t> active_t;
     
@@ -59,6 +62,8 @@ struct scenario_t{
         write1=0;
         read0d=0;
         read1d=0;
+        fail0=0;
+        fail1=0;
         total_inactive=0;
     }
     
@@ -104,6 +109,8 @@ void print_scenario(const vector<lpn_t*> flow_spec, const scenario_t& sce)
     flow_inst_cnt.push_back(sce.read1);
     flow_inst_cnt.push_back(sce.read0d);
     flow_inst_cnt.push_back(sce.read1d);
+    flow_inst_cnt.push_back(sce.fail0);
+    flow_inst_cnt.push_back(sce.fail1);
     
     for (uint32_t i = 0; i < scen.size(); i++) {
         const flow_instance_t& f = scen.at(i);
@@ -203,6 +210,8 @@ int main(int argc, char *argv[]) {
     lpn_t* cpu1_read=build_cpu1_read();
     lpn_t* cpu0_dread=build_cpu0_dread();
     lpn_t* cpu1_dread=build_cpu1_dread();
+    lpn_t* cpu0_fail=build_cpu0_storefail();
+    lpn_t* cpu1_fail=build_cpu1_storefail();
     flow_spec.push_back(msi_flow);//write0
     msi_flow->set_index(0);
     flow_spec.push_back(cpu0_read);
@@ -215,8 +224,14 @@ int main(int argc, char *argv[]) {
     cpu0_dread->set_index(4);
     flow_spec.push_back(cpu1_dread);
     cpu1_dread->set_index(5);
+    flow_spec.push_back(cpu0_fail);
+    cpu0_fail->set_index(6);
+    flow_spec.push_back(cpu1_fail);
+    cpu1_fail->set_index(7);
     
     vector<uint32_t> flow_inst_cnt;
+    flow_inst_cnt.push_back(0);
+    flow_inst_cnt.push_back(0);
     flow_inst_cnt.push_back(0);
     flow_inst_cnt.push_back(0);
     flow_inst_cnt.push_back(0);
@@ -341,6 +356,8 @@ int main(int argc, char *argv[]) {
                 new_msg.cmd = readExres;
             else if (tmp_str == "LoadLockedreq")
                 new_msg.cmd = loadLockedreq;
+            else if (tmp_str == "StoreCondFailreq")
+                new_msg.cmd = StoreCondFailreq;
             else
                 throw std::invalid_argument("Unrecognized command " + tmp_str);
             
@@ -447,6 +464,10 @@ int main(int argc, char *argv[]) {
                             new_scenario.read0d++;
                         else if(flow_index==5)
                             new_scenario.read1d++;
+                        else if(flow_index==6)
+                            new_scenario.fail0++;
+                        else if(flow_index==7)
+                            new_scenario.fail1++;
                         new_scenario.active_t.erase(new_scenario.active_t.begin()+i);
                     }
                     
@@ -1868,4 +1889,63 @@ lpn_t* build_cpu1_dread(void){
     
     return lpn;
 
+}
+lpn_t* build_cpu0_storefail(void){
+    lpn_t* lpn = new lpn_t;
+    
+    lpn->set_flow_name("****cpu0 storeCondfail******");
+    
+    message_t msg1;
+    msg1.pre_cfg = (1<<0);
+    msg1.post_cfg = (1 << 1);
+    msg1.src = cpu0;
+    msg1.dest = icache0;
+    msg1.cmd = StoreCondFailreq;
+    msg1.addr = NDEF;
+    lpn->insert_msg(msg1);
+    
+    
+    message_t msg15;
+    msg15.pre_cfg = (1<<1);
+    msg15.post_cfg = (1 << 17);
+    msg15.src = icache0;
+    msg15.dest = cpu0;
+    msg15.cmd = readres;
+    msg15.addr = NDEF;
+    lpn->insert_msg(msg15);
+
+    
+    lpn->set_init_cfg(1<<0);
+    
+    return lpn;
+}
+
+lpn_t* build_cpu1_storefail(void){
+    lpn_t* lpn = new lpn_t;
+    
+    lpn->set_flow_name("****cpu1 storeCondfail******");
+    
+    message_t msg1;
+    msg1.pre_cfg = (1<<0);
+    msg1.post_cfg = (1 << 1);
+    msg1.src = cpu1;
+    msg1.dest = icache1;
+    msg1.cmd = StoreCondFailreq;
+    msg1.addr = NDEF;
+    lpn->insert_msg(msg1);
+    
+    
+    message_t msg15;
+    msg15.pre_cfg = (1<<1);
+    msg15.post_cfg = (1 << 17);
+    msg15.src = icache1;
+    msg15.dest = cpu1;
+    msg15.cmd = readres;
+    msg15.addr = NDEF;
+    lpn->insert_msg(msg15);
+    
+    
+    lpn->set_init_cfg(1<<0);
+    
+    return lpn;
 }
