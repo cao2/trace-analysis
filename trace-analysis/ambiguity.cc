@@ -341,14 +341,13 @@ int main(int argc, char *argv[]) {
                 new_msg.cmd = read ;
             else if (tmp_str == "write")
                 new_msg.cmd = write ;
-            else if (tmp_str == "iFunc")
-                new_msg.cmd = iFunc ;
-           // /else if (tmp_str == "StoreCondres")
-             //   new_msg.cmd = storeCondres;
-            else if (tmp_str == "loadLocked")
-                new_msg.cmd = loadLocked;
             else if (tmp_str == "StoreCondFailreq")
                 new_msg.cmd = StoreCondFailreq;
+            else if (tmp_str == "iFunc")
+                new_msg.cmd = iFunc ;
+            else if (tmp_str == "loadLocked")
+                new_msg.cmd = loadLocked;
+            
             else
                 throw std::invalid_argument("Unrecognized command " + tmp_str);
             
@@ -410,6 +409,7 @@ int main(int argc, char *argv[]) {
         
         
         vector<message_t> msg_vec;
+        
         if (msg.cmd==read){
             //include readreq, readres
             message_t n_msg=msg;
@@ -430,6 +430,36 @@ int main(int argc, char *argv[]) {
             msg_vec.push_back(n_msg);
             msg_vec.push_back(m_msg);
         }
+        else if(msg.cmd==StoreCondFailreq){
+            msg_vec.push_back(msg);
+        }
+        else{
+            message_t n_msg=msg;
+            n_msg.cmd=readExreq;
+            message_t m_msg=msg;
+            m_msg.cmd=Upgradereq;
+            message_t x_msg=msg;
+            x_msg.cmd=storeCondreq;
+            message_t y_msg=msg;
+            y_msg.cmd=Upgraderes;
+            message_t z_msg=msg;
+            z_msg.cmd=readExres;
+            message_t g_msg=msg;
+            g_msg.cmd=loadLockedreq;
+            message_t f_msg=msg;
+            f_msg.cmd=readres;
+            
+            msg_vec.push_back(n_msg);
+            msg_vec.push_back(m_msg);
+            msg_vec.push_back(x_msg);
+            msg_vec.push_back(y_msg);
+            msg_vec.push_back(z_msg);
+            msg_vec.push_back(g_msg);
+            msg_vec.push_back(f_msg);
+
+        }
+        
+        /**
         else if(msg.cmd==iFunc){
             //include readExreq, readExres, Upgradereq, Upgraderes, StoreCondReq
             message_t n_msg=msg;
@@ -459,10 +489,8 @@ int main(int argc, char *argv[]) {
             msg_vec.push_back(m_msg);
 
         }
-        else if(msg.cmd==StoreCondFailreq){
-            msg_vec.push_back(msg);
-        }
-        
+       
+        **/
         
         vector<scenario_t> new_s_stack;
         
