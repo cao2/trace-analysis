@@ -35,7 +35,13 @@ const command_t Upgraderes = 10;
 const command_t loadLockedreq=11;
 const command_t loadLockedres=12;
 const command_t StoreCondFailreq=13;
-string cmd_vector[14] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq","loadLockedreq","loadLockedres","StoreCondFailreq"};
+const command_t read=14;
+const command_t write=15;
+const command_t iFunc=16;
+const command_t loadLocked=17;
+const command_t Upgrade=18;
+
+string cmd_vector[19] = {"-", "readreq", "readres", "writereq", "writeres", "readExreq", "readExres","storeCondreq","storeCondres","Upgraderes","Upgradereq","loadLockedreq","loadLockedres","StoreCondFailreq","read","write","iFunc","loadLocked","Upgrade"};
 
 // Define the ranges of memory address spaces.
 typedef uint32_t address_t;
