@@ -206,15 +206,6 @@ int main(int argc, char *argv[]) {
     // Build flow specification
     vector<lpn_t*> flow_spec;
     vector<uint32_t> noneed_monitors;
-    if(argc==3){
-        stringstream lineStream(argv[2]);
-        uint32_t num;
-        while (lineStream >> num) noneed_monitors.push_back(num);
-        
-        //for (uint32_t i: active_monitors)
-        //  cout << i << ' '<<endl;
-    }
-    
     
     lpn_t* msi_flow = build_msi_flow_v1();
     lpn_t* cpu0_read = build_cpu0_read();
