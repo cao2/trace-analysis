@@ -576,7 +576,7 @@ lpn_t* build_msi_flow_v1(void) {
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu0 write*******");
-    
+/**
     message_t msg1;
     msg1.pre_cfg = (1<<0);
     msg1.post_cfg = (1 << 1);
@@ -585,7 +585,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg1.cmd = writereq;
     msg1.addr = NDEF;
     lpn->insert_msg(msg1);
-    
+**/
     
     message_t msg2;
     msg2.pre_cfg = (1<<1);
@@ -605,7 +605,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg3.addr = NDEF;
     lpn->insert_msg(msg3);
     
-    
+  /**
     message_t msg4;
     msg4.pre_cfg = (1<<6);
     msg4.post_cfg = (1<<9);
@@ -614,7 +614,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg4.cmd = readExreq;
     msg4.addr = NDEF;
     lpn->insert_msg(msg4);
-    
+    **/
     message_t msg5;
     msg5.pre_cfg = (1<<3);
     msg5.post_cfg = (1<<7);
@@ -623,7 +623,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg5.cmd = readExreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
-    
+/**
     message_t msg6;
     msg6.pre_cfg = (1<<7);
     msg6.post_cfg = (1<<10);
@@ -632,7 +632,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg6.cmd = readExreq;
     msg6.addr = NDEF;
     lpn->insert_msg(msg6);
-    
+**/
     message_t msg7;
     msg7.pre_cfg = (1<<4);
     msg7.post_cfg = (1 << 8);
@@ -641,7 +641,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg7.cmd = readExreq;
     msg7.addr = NDEF;
     lpn->insert_msg(msg7);
-    
+/**
     
     message_t msg8;
     msg8.pre_cfg = (1<<8);
@@ -651,7 +651,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg8.cmd = readExreq;
     msg8.addr = NDEF;
     lpn->insert_msg(msg8);
-    
+ **/
     
     message_t msg9;
     msg9.pre_cfg = (1<<5);
@@ -689,7 +689,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg13.cmd = readExres;
     msg12.addr = NDEF;
     lpn->insert_msg(msg13);
-    
+  /**
     message_t msg14;
     msg14.pre_cfg = (1<<15);
     msg14.post_cfg = (1<<16);
@@ -698,7 +698,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg14.cmd = writeres;
     msg14.addr = NDEF;
     lpn->insert_msg(msg14);
-    
+   
     message_t msg15;
     msg15.pre_cfg = (1<<1);
     msg15.post_cfg = (1<<17);
@@ -707,7 +707,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg15.cmd = writeres;
     msg15.addr = NDEF;
     lpn->insert_msg(msg15);
-    
+  **/
     message_t msg22;
     msg22.pre_cfg = (1<<1);
     msg22.post_cfg = (1<<18)|(1 << 19)|(1 << 20)|(1 << 21);
@@ -727,7 +727,7 @@ lpn_t* build_msi_flow_v1(void) {
     lpn->insert_msg(msg23);
     
     
-    
+    /**
     message_t msg24;
     msg24.pre_cfg = (1<<22);
     msg24.post_cfg = (1<<25);
@@ -736,7 +736,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg24.cmd = Upgradereq;
     msg24.addr = NDEF;
     lpn->insert_msg(msg24);
-    
+    **/
     message_t msg25;
     msg25.pre_cfg = (1<<19);
     msg25.post_cfg = (1<<23);
@@ -745,7 +745,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg25.cmd = Upgradereq;
     msg25.addr = NDEF;
     lpn->insert_msg(msg25);
-    
+   /**
     message_t msg26;
     msg26.pre_cfg = (1<<23);
     msg26.post_cfg = (1<<26);
@@ -754,7 +754,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg26.cmd = Upgradereq;
     msg26.addr = NDEF;
     lpn->insert_msg(msg26);
-    
+    **/
     message_t msg27;
     msg27.pre_cfg = (1<<20);
     msg27.post_cfg = (1 << 24);
@@ -763,7 +763,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg27.cmd = Upgradereq;
     msg27.addr = NDEF;
     lpn->insert_msg(msg27);
-    
+    /**
     
     message_t msg28;
     msg28.pre_cfg = (1<<24);
@@ -774,7 +774,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg28.addr = NDEF;
     lpn->insert_msg(msg28);
     
-    
+    **/
     message_t msg29;
     msg29.pre_cfg = (1<<21);
     msg29.post_cfg = (1<<28);
@@ -811,7 +811,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg33.cmd = Upgraderes;
     msg32.addr = NDEF;
     lpn->insert_msg(msg33);
-    
+    /**
     message_t msg34;
     msg34.pre_cfg = (1<30);
     msg34.post_cfg = (1<<31);
@@ -820,7 +820,7 @@ lpn_t* build_msi_flow_v1(void) {
     msg34.cmd = writeres;
     msg34.addr = NDEF;
     lpn->insert_msg(msg34);
-    
+    **/
     
     lpn->set_init_cfg(1<<0);
     
@@ -832,7 +832,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu1 write*******");
-    
+    /**
     message_t msg1;
     msg1.pre_cfg = (1<<0);
     msg1.post_cfg = (1 << 1);
@@ -841,7 +841,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     msg1.cmd = writereq;
     msg1.addr = NDEF;
     lpn->insert_msg(msg1);
-    
+    **/
     
     message_t msg2;
     msg2.pre_cfg = (1<<1);
@@ -862,7 +862,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     lpn->insert_msg(msg3);
     
     
-    
+    /**
     message_t msg4;
     msg4.pre_cfg = (1<<6);
     msg4.post_cfg = (1<<9);
@@ -871,7 +871,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     msg4.cmd = readExreq;
     msg4.addr = NDEF;
     lpn->insert_msg(msg4);
-    
+    **/
     message_t msg5;
     msg5.pre_cfg = (1<<3);
     msg5.post_cfg = (1<<7);
@@ -880,7 +880,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     msg5.cmd = readExreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
-    
+    /**
     message_t msg6;
     msg6.pre_cfg = (1<<7);
     msg6.post_cfg = (1<<10);
@@ -889,7 +889,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     msg6.cmd = readExreq;
     msg6.addr = NDEF;
     lpn->insert_msg(msg6);
-    
+    **/
     message_t msg7;
     msg7.pre_cfg = (1<<4);
     msg7.post_cfg = (1 << 8);
