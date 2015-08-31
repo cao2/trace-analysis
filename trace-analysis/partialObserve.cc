@@ -436,16 +436,16 @@ int main(int argc, char *argv[]) {
         
         vector<scenario_t> new_s_stack;
         
-        vector<config_t> flow_spec_flag;
+        int flow_spec_flag[8];
         
         //find out if new msg can create a new flow_inst
         for (uint32_t i = 0; i < flow_spec.size(); i++) {
             lpn_t* f = flow_spec.at(i);
             config_t new_cfg = f->accept(msg);
             if (new_cfg != null_cfg)
-                flow_spec_flag.push_back(new_cfg);
+                flow_spec_flag[i]=new_cfg;
             else
-                flow_spec_flag.push_back(99);
+                flow_spec_flag[i]=99;
             //cout << "Info: new instance (" << new_f.flow_inst->get_flow_name() << ", " << new_f.inst_id << ") is created" << endl << flush;
             //cout << "Info: " << msg.toString() << "\t\t (" << new_f.flow_inst->get_flow_name() << ", " << new_f.inst_id << ")." << endl << flush;
             
@@ -505,14 +505,14 @@ int main(int argc, char *argv[]) {
             }
             
             // Create a new flow instance to match msg.
-            for(uint32_t i=0;i<flow_spec_flag.size();i++){
-                if(flow_spec_flag.at(i)!=99){
+            for(uint32_t i=0;i<flow_spec.size();i++){
+                if(flow_spec_flag[i]!=99){
                     //cout<<"create new scenario: "<<i<< " "<<cfg_str_c(flow_spec_flag.at(i))<<endl;
                     scenario_t new_scenario = scenario;
                     flow_instance_t new_f;
                     new_f.flow_inst = flow_spec.at(i);
                     ++flow_inst_cnt.at(i);
-                    new_f.cfg = flow_spec_flag.at(i);
+                    new_f.cfg = flow_spec_flag[i];
                     new_scenario.active_t.push_back(new_f);
                     new_s_stack.push_back(new_scenario);
                     tri_stack.push(tri+1);

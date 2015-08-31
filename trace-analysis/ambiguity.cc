@@ -411,29 +411,25 @@ int main(int argc, char *argv[]) {
         vector<message_t> msg_vec;
         
         if (msg.cmd==read){
-            //include readreq, readres
+            //include readreq, readres, writereq, writeres
             message_t n_msg=msg;
             n_msg.cmd=readreq;
             message_t m_msg=msg;
             m_msg.cmd=readres;
+            message_t x_msg=msg;
+            x_msg.cmd=writereq;
+            message_t y_msg=msg;
+            y_msg.cmd=writeres;
             
             msg_vec.push_back(n_msg);
             msg_vec.push_back(m_msg);
-        }
-        else if(msg.cmd==write){
-            //include writereq, writeres
-            message_t n_msg=msg;
-            n_msg.cmd=writereq;
-            message_t m_msg=msg;
-            m_msg.cmd=writeres;
-            
-            msg_vec.push_back(n_msg);
-            msg_vec.push_back(m_msg);
+            msg_vec.push_back(x_msg);
+            msg_vec.push_back(y_msg);
         }
         else if(msg.cmd==StoreCondFailreq){
             msg_vec.push_back(msg);
         }
-        else{
+        else if(msg.cmd==iFunc){
             message_t n_msg=msg;
             n_msg.cmd=readExreq;
             message_t m_msg=msg;
@@ -458,7 +454,9 @@ int main(int argc, char *argv[]) {
             msg_vec.push_back(f_msg);
 
         }
-        
+        else{
+            cout<<"no such func"<<endl;
+        }
         /**
         else if(msg.cmd==iFunc){
             //include readExreq, readExres, Upgradereq, Upgraderes, StoreCondReq
@@ -494,29 +492,21 @@ int main(int argc, char *argv[]) {
         
         vector<scenario_t> new_s_stack;
         
-        vector<config_t> flow_spec_flag;
+        int flow_spec_flag[8];
         int yuting;
     for(yuting=0;yuting<msg_vec.size();yuting++){
         msg=msg_vec.at(yuting);
+        
          cout << tri<<"***  " << msg.toString() <<"  "<< s_stack.size() <<endl << endl;
         //find out if new msg can create a new flow_inst
         for (uint32_t i = 0; i < flow_spec.size(); i++) {
             lpn_t* f = flow_spec.at(i);
             config_t new_cfg = f->accept(msg);
             if (new_cfg != null_cfg)
-                flow_spec_flag.push_back(new_cfg);
+                flow_spec_flag[i]=new_cfg;
             else
-                flow_spec_flag.push_back(99);
-            //cout << "Info: new instance (" << new_f.flow_inst->get_flow_name() << ", " << new_f.inst_id << ") is created" << endl << flush;
-            //cout << "Info: " << msg.toString() << "\t\t (" << new_f.flow_inst->get_flow_name() << ", " << new_f.inst_id << ")." << endl << flush;
-            
-            //cout << "+++  new scenario (0) pushed to stack" << endl;
-            //print_scenario(new_scenario);
-            
-            
-            
+                flow_spec_flag[i]=99;
         }
-        
         // Match the next message from trace against the current scenario.
         for(uint32_t ct=0;ct<s_stack.size();ct++)
         {
@@ -564,16 +554,22 @@ int main(int argc, char *argv[]) {
                 }
                 
             }
-            
             // Create a new flow instance to match msg.
-            for(uint32_t i=0;i<flow_spec_flag.size();i++){
-                if(flow_spec_flag.at(i)!=99){
-                    //cout<<"create new scenario: "<<i<< " "<<cfg_str_c(flow_spec_flag.at(i))<<endl;
+            /**82
+            ****cpu0 read*******: 	169
+            ****cpu1 write*******: 	83
+            ****cpu1 read*******: 	190
+            ****cpu0 read to dcache*******: 	829
+            ****cpu1 read to dcache*******: 	803
+            ****cpu0 storeCondfail******: 	0
+**/
+            for(uint32_t i=0;i<flow_spec.size();i++){
+                if(flow_spec_flag[i]!=99){
                     scenario_t new_scenario = scenario;
                     flow_instance_t new_f;
                     new_f.flow_inst = flow_spec.at(i);
                     ++flow_inst_cnt.at(i);
-                    new_f.cfg = flow_spec_flag.at(i);
+                    new_f.cfg = flow_spec_flag[i];
                     new_scenario.active_t.push_back(new_f);
                     new_s_stack.push_back(new_scenario);
                     tri_stack.push(tri+1);
@@ -582,7 +578,7 @@ int main(int argc, char *argv[]) {
             }
             
         }
-        }
+    }
         if (match == false) {
             tri_stack.push(tri+1);
             cout << "Info: " << trace.at(tri).toString() << " not matched, backtrack." << endl;
@@ -629,7 +625,6 @@ int main(int argc, char *argv[]) {
 }
 
 
-
 lpn_t* build_msi_flow_v1(void) {
     
     
@@ -637,19 +632,19 @@ lpn_t* build_msi_flow_v1(void) {
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu0 write*******");
-/**
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu0;
-    msg1.dest = icache0;
-    msg1.cmd = writereq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-**/
+    /**
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu0;
+     msg1.dest = icache0;
+     msg1.cmd = writereq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg2;
-    msg2.pre_cfg = (1<<1);
+    msg2.pre_cfg = (1<<0);
     msg2.post_cfg = (1<<2)|(1 << 4)|(1 << 3)|(1 << 5);
     msg2.src = dcache0;
     msg2.dest = membus;
@@ -659,60 +654,60 @@ lpn_t* build_msi_flow_v1(void) {
     
     message_t msg3;
     msg3.pre_cfg = (1<<2);
-    msg3.post_cfg = (1<<6);
+    msg3.post_cfg = (1<<9);
     msg3.src = membus;
     msg3.dest = icache1;
     msg3.cmd = readExreq;
     msg3.addr = NDEF;
     lpn->insert_msg(msg3);
     
-  /**
-    message_t msg4;
-    msg4.pre_cfg = (1<<6);
-    msg4.post_cfg = (1<<9);
-    msg4.src = dcache1;
-    msg4.dest = cpu1;
-    msg4.cmd = readExreq;
-    msg4.addr = NDEF;
-    lpn->insert_msg(msg4);
-    **/
+    /**
+     message_t msg4;
+     msg4.pre_cfg = (1<<6);
+     msg4.post_cfg = (1<<9);
+     msg4.src = dcache1;
+     msg4.dest = cpu1;
+     msg4.cmd = readExreq;
+     msg4.addr = NDEF;
+     lpn->insert_msg(msg4);
+     **/
     message_t msg5;
     msg5.pre_cfg = (1<<3);
-    msg5.post_cfg = (1<<7);
+    msg5.post_cfg = (1<<10);
     msg5.src = membus;
     msg5.dest = dcache1;
     msg5.cmd = readExreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
-/**
-    message_t msg6;
-    msg6.pre_cfg = (1<<7);
-    msg6.post_cfg = (1<<10);
-    msg6.src = icache1;
-    msg6.dest = cpu1;
-    msg6.cmd = readExreq;
-    msg6.addr = NDEF;
-    lpn->insert_msg(msg6);
-**/
+    /**
+     message_t msg6;
+     msg6.pre_cfg = (1<<7);
+     msg6.post_cfg = (1<<10);
+     msg6.src = icache1;
+     msg6.dest = cpu1;
+     msg6.cmd = readExreq;
+     msg6.addr = NDEF;
+     lpn->insert_msg(msg6);
+     **/
     message_t msg7;
     msg7.pre_cfg = (1<<4);
-    msg7.post_cfg = (1 << 8);
+    msg7.post_cfg = (1 << 11);
     msg7.src = membus;
     msg7.dest = icache0;
     msg7.cmd = readExreq;
     msg7.addr = NDEF;
     lpn->insert_msg(msg7);
-/**
     
-    message_t msg8;
-    msg8.pre_cfg = (1<<8);
-    msg8.post_cfg = (1<<11);
-    msg8.src = dcache0;
-    msg8.dest = cpu0;
-    msg8.cmd = readExreq;
-    msg8.addr = NDEF;
-    lpn->insert_msg(msg8);
- **/
+    /**
+     message_t msg8;
+     msg8.pre_cfg = (1<<8);
+     msg8.post_cfg = (1<<11);
+     msg8.src = dcache0;
+     msg8.dest = cpu0;
+     msg8.cmd = readExreq;
+     msg8.addr = NDEF;
+     lpn->insert_msg(msg8);
+     **/
     
     message_t msg9;
     msg9.pre_cfg = (1<<5);
@@ -744,31 +739,31 @@ lpn_t* build_msi_flow_v1(void) {
     
     message_t msg13;
     msg13.pre_cfg = (1<<14);
-    msg13.post_cfg = (1 << 15);
+    msg13.post_cfg = (1 << 16);
     msg13.src = membus;
     msg13.dest = dcache0;
     msg13.cmd = readExres;
     msg12.addr = NDEF;
     lpn->insert_msg(msg13);
-  /**
-    message_t msg14;
-    msg14.pre_cfg = (1<<15);
-    msg14.post_cfg = (1<<16);
-    msg14.src = icache0;
-    msg14.dest = cpu0;
-    msg14.cmd = writeres;
-    msg14.addr = NDEF;
-    lpn->insert_msg(msg14);
-   
-    message_t msg15;
-    msg15.pre_cfg = (1<<1);
-    msg15.post_cfg = (1<<17);
-    msg15.src = icache0;
-    msg15.dest = cpu0;
-    msg15.cmd = writeres;
-    msg15.addr = NDEF;
-    lpn->insert_msg(msg15);
-  **/
+    /**
+     message_t msg14;
+     msg14.pre_cfg = (1<<15);
+     msg14.post_cfg = (1<<16);
+     msg14.src = icache0;
+     msg14.dest = cpu0;
+     msg14.cmd = writeres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
+     
+     message_t msg15;
+     msg15.pre_cfg = (1<<1);
+     msg15.post_cfg = (1<<17);
+     msg15.src = icache0;
+     msg15.dest = cpu0;
+     msg15.cmd = writeres;
+     msg15.addr = NDEF;
+     lpn->insert_msg(msg15);
+     **/
     message_t msg22;
     msg22.pre_cfg = (1<<1);
     msg22.post_cfg = (1<<18)|(1 << 19)|(1 << 20)|(1 << 21);
@@ -780,7 +775,7 @@ lpn_t* build_msi_flow_v1(void) {
     
     message_t msg23;
     msg23.pre_cfg = (1<<18);
-    msg23.post_cfg = (1<<22);
+    msg23.post_cfg = (1<<25);
     msg23.src = membus;
     msg23.dest = icache1;
     msg23.cmd = Upgradereq;
@@ -789,53 +784,53 @@ lpn_t* build_msi_flow_v1(void) {
     
     
     /**
-    message_t msg24;
-    msg24.pre_cfg = (1<<22);
-    msg24.post_cfg = (1<<25);
-    msg24.src = icache1;
-    msg24.dest = cpu1;
-    msg24.cmd = Upgradereq;
-    msg24.addr = NDEF;
-    lpn->insert_msg(msg24);
-    **/
+     message_t msg24;
+     msg24.pre_cfg = (1<<22);
+     msg24.post_cfg = (1<<25);
+     msg24.src = icache1;
+     msg24.dest = cpu1;
+     msg24.cmd = Upgradereq;
+     msg24.addr = NDEF;
+     lpn->insert_msg(msg24);
+     **/
     message_t msg25;
     msg25.pre_cfg = (1<<19);
-    msg25.post_cfg = (1<<23);
+    msg25.post_cfg = (1<<26);
     msg25.src = membus;
     msg25.dest = icache1;
     msg25.cmd = Upgradereq;
     msg25.addr = NDEF;
     lpn->insert_msg(msg25);
-   /**
-    message_t msg26;
-    msg26.pre_cfg = (1<<23);
-    msg26.post_cfg = (1<<26);
-    msg26.src = icache1;
-    msg26.dest = cpu1;
-    msg26.cmd = Upgradereq;
-    msg26.addr = NDEF;
-    lpn->insert_msg(msg26);
-    **/
+    /**
+     message_t msg26;
+     msg26.pre_cfg = (1<<23);
+     msg26.post_cfg = (1<<26);
+     msg26.src = icache1;
+     msg26.dest = cpu1;
+     msg26.cmd = Upgradereq;
+     msg26.addr = NDEF;
+     lpn->insert_msg(msg26);
+     **/
     message_t msg27;
     msg27.pre_cfg = (1<<20);
-    msg27.post_cfg = (1 << 24);
+    msg27.post_cfg = (1 << 27);
     msg27.src = membus;
     msg27.dest = icache0;
     msg27.cmd = Upgradereq;
     msg27.addr = NDEF;
     lpn->insert_msg(msg27);
+    
     /**
+     message_t msg28;
+     msg28.pre_cfg = (1<<24);
+     msg28.post_cfg = (1<<27);
+     msg28.src = icache0;
+     msg28.dest = cpu0;
+     msg28.cmd = Upgradereq;
+     msg28.addr = NDEF;
+     lpn->insert_msg(msg28);
+     **/
     
-    message_t msg28;
-    msg28.pre_cfg = (1<<24);
-    msg28.post_cfg = (1<<27);
-    msg28.src = icache0;
-    msg28.dest = cpu0;
-    msg28.cmd = Upgradereq;
-    msg28.addr = NDEF;
-    lpn->insert_msg(msg28);
-    
-    **/
     message_t msg29;
     msg29.pre_cfg = (1<<21);
     msg29.post_cfg = (1<<28);
@@ -866,22 +861,22 @@ lpn_t* build_msi_flow_v1(void) {
     
     message_t msg33;
     msg33.pre_cfg = (1<29);
-    msg33.post_cfg = (1 << 30);
+    msg33.post_cfg = (1 << 31);
     msg33.src = membus;
     msg33.dest = icache0;
     msg33.cmd = Upgraderes;
     msg32.addr = NDEF;
     lpn->insert_msg(msg33);
     /**
-    message_t msg34;
-    msg34.pre_cfg = (1<30);
-    msg34.post_cfg = (1<<31);
-    msg34.src = icache0;
-    msg34.dest = cpu0;
-    msg34.cmd = writeres;
-    msg34.addr = NDEF;
-    lpn->insert_msg(msg34);
-    **/
+     message_t msg34;
+     msg34.pre_cfg = (1<30);
+     msg34.post_cfg = (1<<31);
+     msg34.src = icache0;
+     msg34.dest = cpu0;
+     msg34.cmd = writeres;
+     msg34.addr = NDEF;
+     lpn->insert_msg(msg34);
+     **/
     
     lpn->set_init_cfg(1<<0);
     
@@ -890,22 +885,25 @@ lpn_t* build_msi_flow_v1(void) {
 }
 lpn_t* build_us_mem_rd_flow_v1(void)
 {
+    
+    
+    
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu1 write*******");
     /**
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu1;
-    msg1.dest = icache1;
-    msg1.cmd = writereq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-    **/
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu1;
+     msg1.dest = icache1;
+     msg1.cmd = writereq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg2;
-    msg2.pre_cfg = (1<<1);
+    msg2.pre_cfg = (1<<0);
     msg2.post_cfg = (1<<2)|(1 << 4)|(1 << 3)|(1 << 5);
     msg2.src = dcache1;
     msg2.dest = membus;
@@ -915,61 +913,60 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     
     message_t msg3;
     msg3.pre_cfg = (1<<2);
-    msg3.post_cfg = (1<<6);
+    msg3.post_cfg = (1<<9);
     msg3.src = membus;
     msg3.dest = icache0;
     msg3.cmd = readExreq;
     msg3.addr = NDEF;
     lpn->insert_msg(msg3);
     
-    
     /**
-    message_t msg4;
-    msg4.pre_cfg = (1<<6);
-    msg4.post_cfg = (1<<9);
-    msg4.src = dcache0;
-    msg4.dest = cpu0;
-    msg4.cmd = readExreq;
-    msg4.addr = NDEF;
-    lpn->insert_msg(msg4);
-    **/
+     message_t msg4;
+     msg4.pre_cfg = (1<<6);
+     msg4.post_cfg = (1<<9);
+     msg4.src = dcache0;
+     msg4.dest = cpu0;
+     msg4.cmd = readExreq;
+     msg4.addr = NDEF;
+     lpn->insert_msg(msg4);
+     **/
     message_t msg5;
     msg5.pre_cfg = (1<<3);
-    msg5.post_cfg = (1<<7);
+    msg5.post_cfg = (1<<10);
     msg5.src = membus;
     msg5.dest = dcache0;
     msg5.cmd = readExreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
     /**
-    message_t msg6;
-    msg6.pre_cfg = (1<<7);
-    msg6.post_cfg = (1<<10);
-    msg6.src = icache0;
-    msg6.dest = cpu0;
-    msg6.cmd = readExreq;
-    msg6.addr = NDEF;
-    lpn->insert_msg(msg6);
-    **/
+     message_t msg6;
+     msg6.pre_cfg = (1<<7);
+     msg6.post_cfg = (1<<10);
+     msg6.src = icache0;
+     msg6.dest = cpu0;
+     msg6.cmd = readExreq;
+     msg6.addr = NDEF;
+     lpn->insert_msg(msg6);
+     **/
     message_t msg7;
     msg7.pre_cfg = (1<<4);
-    msg7.post_cfg = (1 << 8);
+    msg7.post_cfg = (1 << 11);
     msg7.src = membus;
     msg7.dest = icache1;
     msg7.cmd = readExreq;
     msg7.addr = NDEF;
     lpn->insert_msg(msg7);
     
-    
-    message_t msg8;
-    msg8.pre_cfg = (1<<8);
-    msg8.post_cfg = (1<<11);
-    msg8.src = dcache1;
-    msg8.dest = cpu1;
-    msg8.cmd = readExreq;
-    msg8.addr = NDEF;
-    lpn->insert_msg(msg8);
-    
+    /**
+     message_t msg8;
+     msg8.pre_cfg = (1<<8);
+     msg8.post_cfg = (1<<11);
+     msg8.src = dcache1;
+     msg8.dest = cpu1;
+     msg8.cmd = readExreq;
+     msg8.addr = NDEF;
+     lpn->insert_msg(msg8);
+     **/
     
     message_t msg9;
     msg9.pre_cfg = (1<<5);
@@ -980,16 +977,6 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     msg9.addr = NDEF;
     lpn->insert_msg(msg9);
     
-    /**
-     message_t msg10;
-     msg10.pre_cfg = (1<<9)|(1<<10)|(1<<11)|(1<<12);
-     msg10.post_cfg = (1 << 13);
-     msg10.src = NDEF;
-     msg10.dest = NDEF;
-     msg10.cmd = NDEF;
-     msg10.addr = NDEF;
-     lpn->insert_msg(msg10);
-     **/
     
     message_t msg11;
     msg11.pre_cfg = (1<<9)|(1<<10)|(1<<11)|(1<<12);
@@ -1011,33 +998,31 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     
     message_t msg13;
     msg13.pre_cfg = (1<<14);
-    msg13.post_cfg = (1 << 15);
+    msg13.post_cfg = (1 << 16);
     msg13.src = membus;
     msg13.dest = dcache1;
     msg13.cmd = readExres;
     msg12.addr = NDEF;
     lpn->insert_msg(msg13);
-    
-    message_t msg14;
-    msg14.pre_cfg = (1<<15);
-    msg14.post_cfg = (1 << 16);
-    msg14.src = icache1;
-    msg14.dest = cpu1;
-    msg14.cmd = writeres;
-    msg14.addr = NDEF;
-    lpn->insert_msg(msg14);
-    
-    message_t msg15;
-    msg15.pre_cfg = (1<<1);
-    msg15.post_cfg = (1 << 17);
-    msg15.src = icache1;
-    msg15.dest = cpu1;
-    msg15.cmd = writeres;
-    msg15.addr = NDEF;
-    lpn->insert_msg(msg15);
-    
-    
-    
+    /**
+     message_t msg14;
+     msg14.pre_cfg = (1<<15);
+     msg14.post_cfg = (1<<16);
+     msg14.src = icache1;
+     msg14.dest = cpu1;
+     msg14.cmd = writeres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
+     
+     message_t msg15;
+     msg15.pre_cfg = (1<<1);
+     msg15.post_cfg = (1<<17);
+     msg15.src = icache1;
+     msg15.dest = cpu1;
+     msg15.cmd = writeres;
+     msg15.addr = NDEF;
+     lpn->insert_msg(msg15);
+     **/
     message_t msg22;
     msg22.pre_cfg = (1<<1);
     msg22.post_cfg = (1<<18)|(1 << 19)|(1 << 20)|(1 << 21);
@@ -1049,7 +1034,7 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     
     message_t msg23;
     msg23.pre_cfg = (1<<18);
-    msg23.post_cfg = (1<<22);
+    msg23.post_cfg = (1<<25);
     msg23.src = membus;
     msg23.dest = icache0;
     msg23.cmd = Upgradereq;
@@ -1057,53 +1042,53 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     lpn->insert_msg(msg23);
     
     
-    
-    message_t msg24;
-    msg24.pre_cfg = (1<<22);
-    msg24.post_cfg = (1<<25);
-    msg24.src = icache0;
-    msg24.dest = cpu0;
-    msg24.cmd = Upgradereq;
-    msg24.addr = NDEF;
-    lpn->insert_msg(msg24);
-    
+    /**
+     message_t msg24;
+     msg24.pre_cfg = (1<<22);
+     msg24.post_cfg = (1<<25);
+     msg24.src = icache0;
+     msg24.dest = cpu0;
+     msg24.cmd = Upgradereq;
+     msg24.addr = NDEF;
+     lpn->insert_msg(msg24);
+     **/
     message_t msg25;
     msg25.pre_cfg = (1<<19);
-    msg25.post_cfg = (1<<23);
+    msg25.post_cfg = (1<<26);
     msg25.src = membus;
     msg25.dest = icache0;
     msg25.cmd = Upgradereq;
     msg25.addr = NDEF;
     lpn->insert_msg(msg25);
-    
-    message_t msg26;
-    msg26.pre_cfg = (1<<23);
-    msg26.post_cfg = (1<<26);
-    msg26.src = icache0;
-    msg26.dest = cpu0;
-    msg26.cmd = Upgradereq;
-    msg26.addr = NDEF;
-    lpn->insert_msg(msg26);
-    
+    /**
+     message_t msg26;
+     msg26.pre_cfg = (1<<23);
+     msg26.post_cfg = (1<<26);
+     msg26.src = icache0;
+     msg26.dest = cpu0;
+     msg26.cmd = Upgradereq;
+     msg26.addr = NDEF;
+     lpn->insert_msg(msg26);
+     **/
     message_t msg27;
     msg27.pre_cfg = (1<<20);
-    msg27.post_cfg = (1 << 24);
+    msg27.post_cfg = (1 << 27);
     msg27.src = membus;
     msg27.dest = icache1;
     msg27.cmd = Upgradereq;
     msg27.addr = NDEF;
     lpn->insert_msg(msg27);
     
-    
-    message_t msg28;
-    msg28.pre_cfg = (1<<24);
-    msg28.post_cfg = (1<<27);
-    msg28.src = icache1;
-    msg28.dest = cpu1;
-    msg28.cmd = Upgradereq;
-    msg28.addr = NDEF;
-    lpn->insert_msg(msg28);
-    
+    /**
+     message_t msg28;
+     msg28.pre_cfg = (1<<24);
+     msg28.post_cfg = (1<<27);
+     msg28.src = icache1;
+     msg28.dest = cpu1;
+     msg28.cmd = Upgradereq;
+     msg28.addr = NDEF;
+     lpn->insert_msg(msg28);
+     **/
     
     message_t msg29;
     msg29.pre_cfg = (1<<21);
@@ -1135,25 +1120,22 @@ lpn_t* build_us_mem_rd_flow_v1(void)
     
     message_t msg33;
     msg33.pre_cfg = (1<29);
-    msg33.post_cfg = (1 << 30);
+    msg33.post_cfg = (1 << 31);
     msg33.src = membus;
     msg33.dest = icache1;
     msg33.cmd = Upgraderes;
     msg32.addr = NDEF;
     lpn->insert_msg(msg33);
-    
-    
-    message_t msg34;
-    msg34.pre_cfg=(1<30);
-    msg34.post_cfg = (1 << 31);
-    msg34.src = icache1;
-    msg34.dest = cpu1;
-    msg34.cmd = writeres;
-    msg34.addr = NDEF;
-    lpn->insert_msg(msg34);
-    
-    
-    
+    /**
+     message_t msg34;
+     msg34.pre_cfg = (1<30);
+     msg34.post_cfg = (1<<31);
+     msg34.src = icache1;
+     msg34.dest = cpu1;
+     msg34.cmd = writeres;
+     msg34.addr = NDEF;
+     lpn->insert_msg(msg34);
+     **/
     
     lpn->set_init_cfg(1<<0);
     
@@ -1167,18 +1149,19 @@ lpn_t* build_cpu0_read(void) {
     
     lpn->set_flow_name("****cpu0 read*******");
     
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu0;
-    msg1.dest = icache0;
-    msg1.cmd = readreq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-    
+    /**
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu0;
+     msg1.dest = icache0;
+     msg1.cmd = readreq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg2;
-    msg2.pre_cfg = (1<<1);
+    msg2.pre_cfg = (1<<0);
     msg2.post_cfg = (1<<2)|(1 << 4)|(1 << 3)|(1 << 5);
     msg2.src = dcache0;
     msg2.dest = membus;
@@ -1188,60 +1171,63 @@ lpn_t* build_cpu0_read(void) {
     
     message_t msg3;
     msg3.pre_cfg = (1<<2);
-    msg3.post_cfg = (1<<6);
+    msg3.post_cfg = (1<<9);
     msg3.src = membus;
     msg3.dest = icache1;
     msg3.cmd = storeCondreq;
     msg3.addr = NDEF;
     lpn->insert_msg(msg3);
     
-    
-    message_t msg4;
-    msg4.pre_cfg = (1<<6);
-    msg4.post_cfg = (1<<9);
-    msg4.src = dcache1;
-    msg4.dest = cpu1;
-    msg4.cmd = storeCondreq;
-    msg4.addr = NDEF;
-    lpn->insert_msg(msg4);
+    /**
+     message_t msg4;
+     msg4.pre_cfg = (1<<6);
+     msg4.post_cfg = (1<<9);
+     msg4.src = dcache1;
+     msg4.dest = cpu1;
+     msg4.cmd = storeCondreq;
+     msg4.addr = NDEF;
+     lpn->insert_msg(msg4);
+     **/
     
     message_t msg5;
     msg5.pre_cfg = (1<<3);
-    msg5.post_cfg = (1<<7);
+    msg5.post_cfg = (1<<10);
     msg5.src = membus;
     msg5.dest = dcache1;
     msg5.cmd = storeCondreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
     
-    message_t msg6;
-    msg6.pre_cfg = (1<<7);
-    msg6.post_cfg = (1<<10);
-    msg6.src = icache1;
-    msg6.dest = cpu1;
-    msg6.cmd = storeCondreq;
-    msg6.addr = NDEF;
-    lpn->insert_msg(msg6);
+    /**
+     message_t msg6;
+     msg6.pre_cfg = (1<<7);
+     msg6.post_cfg = (1<<10);
+     msg6.src = icache1;
+     msg6.dest = cpu1;
+     msg6.cmd = storeCondreq;
+     msg6.addr = NDEF;
+     lpn->insert_msg(msg6);
+     **/
     
     message_t msg7;
     msg7.pre_cfg = (1<<4);
-    msg7.post_cfg = (1 << 8);
+    msg7.post_cfg = (1 << 11);
     msg7.src = membus;
     msg7.dest = icache0;
     msg7.cmd = storeCondreq;
     msg7.addr = NDEF;
     lpn->insert_msg(msg7);
     
-    
-    message_t msg8;
-    msg8.pre_cfg = (1<<8);
-    msg8.post_cfg = (1<<11);
-    msg8.src = dcache0;
-    msg8.dest = cpu0;
-    msg8.cmd = storeCondreq;
-    msg8.addr = NDEF;
-    lpn->insert_msg(msg8);
-    
+    /**
+     message_t msg8;
+     msg8.pre_cfg = (1<<8);
+     msg8.post_cfg = (1<<11);
+     msg8.src = dcache0;
+     msg8.dest = cpu0;
+     msg8.cmd = storeCondreq;
+     msg8.addr = NDEF;
+     lpn->insert_msg(msg8);
+     **/
     
     message_t msg9;
     msg9.pre_cfg = (1<<5);
@@ -1251,8 +1237,6 @@ lpn_t* build_cpu0_read(void) {
     msg9.cmd = storeCondreq;
     msg9.addr = NDEF;
     lpn->insert_msg(msg9);
-    
-    
     
     message_t msg11;
     msg11.pre_cfg = (1<<9)|(1<<10)|(1<<11)|(1<<12);
@@ -1274,180 +1258,55 @@ lpn_t* build_cpu0_read(void) {
     
     message_t msg13;
     msg13.pre_cfg = (1<<14);
-    msg13.post_cfg = (1 << 15);
+    msg13.post_cfg = (1 << 16);
     msg13.src = membus;
     msg13.dest = dcache0;
     msg13.cmd = readres;
     msg12.addr = NDEF;
     lpn->insert_msg(msg13);
     
-    message_t msg14;
-    msg14.pre_cfg = (1<<15);
-    msg14.post_cfg = (1 << 16);
-    msg14.src = icache0;
-    msg14.dest = cpu0;
-    msg14.cmd = readres;
-    msg14.addr = NDEF;
-    lpn->insert_msg(msg14);
-    
-    message_t msg15;
-    msg15.pre_cfg = (1<<1);
-    msg15.post_cfg = (1 << 17);
-    msg15.src = icache0;
-    msg15.dest = cpu0;
-    msg15.cmd = readres;
-    msg15.addr = NDEF;
-    lpn->insert_msg(msg15);
-    
-    
-    
-    
     /**
-     message_t msg22;
-     msg22.pre_cfg = (1<<1);
-     msg22.post_cfg = (1<<19)|(1 << 18)|(1 <<20)|(1 << 21);
-     msg22.src = cache0;
-     msg22.dest = membus;
-     msg22.cmd = loadLockedreq;
-     msg22.addr = NDEF;
-     lpn->insert_msg(msg22);
+     message_t msg14;
+     msg14.pre_cfg = (1<<15);
+     msg14.post_cfg = (1 << 16);
+     msg14.src = icache0;
+     msg14.dest = cpu0;
+     msg14.cmd = readres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
      
-     message_t msg23;
-     msg23.pre_cfg = (1<<18);
-     msg23.post_cfg = (1<<22);
-     msg23.src = membus;
-     msg23.dest = cache1;
-     msg23.cmd = loadLockedreq;
-     msg23.addr = NDEF;
-     lpn->insert_msg(msg23);
-     
-     
-     message_t msg24;
-     msg24.pre_cfg = (1<<22);
-     msg24.post_cfg = (1<<25);
-     msg24.src = cache1;
-     msg24.dest = cpu1;
-     msg24.cmd = loadLockedreq;
-     msg24.addr = NDEF;
-     lpn->insert_msg(msg24);
-     
-     message_t msg25;
-     msg25.pre_cfg = (1<<19);
-     msg25.post_cfg = (1<<23);
-     msg25.src = membus;
-     msg25.dest = cache1;
-     msg25.cmd = loadLockedreq;
-     msg25.addr = NDEF;
-     lpn->insert_msg(msg25);
-     
-     message_t msg26;
-     msg26.pre_cfg = (1<<23);
-     msg26.post_cfg = (1<<26);
-     msg26.src = cache1;
-     msg26.dest = cpu1;
-     msg26.cmd = loadLockedreq;
-     msg26.addr = NDEF;
-     lpn->insert_msg(msg26);
-     
-     message_t msg27;
-     msg27.pre_cfg = (1<<20);
-     msg27.post_cfg = (1 << 24);
-     msg27.src = membus;
-     msg27.dest = cache0;
-     msg27.cmd = loadLockedreq;
-     msg27.addr = NDEF;
-     lpn->insert_msg(msg27);
-     
-     
-     message_t msg28;
-     msg28.pre_cfg = (1<<24);
-     msg28.post_cfg = (1<<27);
-     msg28.src = cache0;
-     msg28.dest = cpu0;
-     msg28.cmd = loadLockedreq;
-     msg28.addr = NDEF;
-     lpn->insert_msg(msg28);
-     
-     
-     message_t msg29;
-     msg29.pre_cfg = (1<<21);
-     msg29.post_cfg = (1<<28);
-     msg29.src = membus;
-     msg29.dest = mem;
-     msg29.cmd = loadLockedreq;
-     msg29.addr = NDEF;
-     lpn->insert_msg(msg29);
-     
-     
-     message_t msg10;
-     msg10.pre_cfg = (1<<9)|(1<<10)|(1<<31)|(1<<32);
-     msg10.post_cfg = (1 << 33);
-     msg10.src = NDEF;
-     msg10.dest = NDEF;
-     msg10.cmd = NDEF;
-     msg10.addr = NDEF;
-     lpn->insert_msg(msg10);
-     
-     
-     message_t msg31;
-     msg31.pre_cfg = (1<<25)|(1<<26)|(1<<27)|(1<<28);
-     msg31.post_cfg = (1 << 29);
-     msg31.src = mem;
-     msg31.dest = membus;
-     msg31.cmd = readres;
-     msg31.addr = NDEF;
-     lpn->insert_msg(msg31);
-     
-     message_t msg32;
-     msg32.pre_cfg = (1<<25)|(1<<26)|(1<<27)|(1<<28);
-     msg32.post_cfg = (1 << 29);
-     msg32.src = cache1;
-     msg32.dest = membus;
-     msg32.cmd = readres;
-     msg32.addr = NDEF;
-     lpn->insert_msg(msg32);
-     
-     message_t msg33;
-     msg33.pre_cfg = (1<<29);
-     msg33.post_cfg = (1 << 30);
-     msg33.src = membus;
-     msg33.dest = cache0;
-     msg33.cmd = readres;
-     msg32.addr = NDEF;
-     lpn->insert_msg(msg33);
-     
-     message_t msg34;
-     msg34.pre_cfg = (1<<30);
-     msg34.post_cfg = (1 << 31);
-     msg34.src = cache0;
-     msg34.dest = cpu0;
-     msg34.cmd = readres;
-     msg34.addr = NDEF;
-     lpn->insert_msg(msg34);
+     message_t msg15;
+     msg15.pre_cfg = (1<<1);
+     msg15.post_cfg = (1 << 17);
+     msg15.src = icache0;
+     msg15.dest = cpu0;
+     msg15.cmd = readres;
+     msg15.addr = NDEF;
+     lpn->insert_msg(msg15);
      **/
     
     lpn->set_init_cfg(1<<0);
     
     return lpn;
 }
-
 lpn_t* build_cpu1_read(void) {
+    
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu1 read*******");
-    
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu1;
-    msg1.dest = icache1;
-    msg1.cmd = readreq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-    
+    /**
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu1;
+     msg1.dest = icache1;
+     msg1.cmd = readreq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg2;
-    msg2.pre_cfg = (1<<1);
+    msg2.pre_cfg = (1<<0);
     msg2.post_cfg = (1<<2)|(1 << 4)|(1 << 3)|(1 << 5);
     msg2.src = dcache1;
     msg2.dest = membus;
@@ -1457,61 +1316,63 @@ lpn_t* build_cpu1_read(void) {
     
     message_t msg3;
     msg3.pre_cfg = (1<<2);
-    msg3.post_cfg = (1<<6);
+    msg3.post_cfg = (1<<9);
     msg3.src = membus;
     msg3.dest = icache0;
     msg3.cmd = storeCondreq;
     msg3.addr = NDEF;
     lpn->insert_msg(msg3);
     
-    
-    
-    message_t msg4;
-    msg4.pre_cfg = (1<<6);
-    msg4.post_cfg = (1<<9);
-    msg4.src = dcache0;
-    msg4.dest = cpu0;
-    msg4.cmd = storeCondreq;
-    msg4.addr = NDEF;
-    lpn->insert_msg(msg4);
+    /**
+     message_t msg4;
+     msg4.pre_cfg = (1<<6);
+     msg4.post_cfg = (1<<9);
+     msg4.src = dcache0;
+     msg4.dest = cpu0;
+     msg4.cmd = storeCondreq;
+     msg4.addr = NDEF;
+     lpn->insert_msg(msg4);
+     **/
     
     message_t msg5;
     msg5.pre_cfg = (1<<3);
-    msg5.post_cfg = (1<<7);
+    msg5.post_cfg = (1<<10);
     msg5.src = membus;
     msg5.dest = dcache0;
     msg5.cmd = storeCondreq;
     msg5.addr = NDEF;
     lpn->insert_msg(msg5);
     
-    message_t msg6;
-    msg6.pre_cfg = (1<<7);
-    msg6.post_cfg = (1<<10);
-    msg6.src = icache0;
-    msg6.dest = cpu0;
-    msg6.cmd = storeCondreq;
-    msg6.addr = NDEF;
-    lpn->insert_msg(msg6);
+    /**
+     message_t msg6;
+     msg6.pre_cfg = (1<<7);
+     msg6.post_cfg = (1<<10);
+     msg6.src = icache0;
+     msg6.dest = cpu0;
+     msg6.cmd = storeCondreq;
+     msg6.addr = NDEF;
+     lpn->insert_msg(msg6);
+     **/
     
     message_t msg7;
     msg7.pre_cfg = (1<<4);
-    msg7.post_cfg = (1 << 8);
+    msg7.post_cfg = (1 << 11);
     msg7.src = membus;
     msg7.dest = icache1;
     msg7.cmd = storeCondreq;
     msg7.addr = NDEF;
     lpn->insert_msg(msg7);
     
-    
-    message_t msg8;
-    msg8.pre_cfg = (1<<8);
-    msg8.post_cfg = (1<<11);
-    msg8.src = dcache1;
-    msg8.dest = cpu1;
-    msg8.cmd = storeCondreq;
-    msg8.addr = NDEF;
-    lpn->insert_msg(msg8);
-    
+    /**
+     message_t msg8;
+     msg8.pre_cfg = (1<<8);
+     msg8.post_cfg = (1<<11);
+     msg8.src = dcache1;
+     msg8.dest = cpu1;
+     msg8.cmd = storeCondreq;
+     msg8.addr = NDEF;
+     lpn->insert_msg(msg8);
+     **/
     
     message_t msg9;
     msg9.pre_cfg = (1<<5);
@@ -1521,8 +1382,6 @@ lpn_t* build_cpu1_read(void) {
     msg9.cmd = storeCondreq;
     msg9.addr = NDEF;
     lpn->insert_msg(msg9);
-    
-    
     
     message_t msg11;
     msg11.pre_cfg = (1<<9)|(1<<10)|(1<<11)|(1<<12);
@@ -1544,167 +1403,55 @@ lpn_t* build_cpu1_read(void) {
     
     message_t msg13;
     msg13.pre_cfg = (1<<14);
-    msg13.post_cfg = (1 << 15);
+    msg13.post_cfg = (1 << 16);
     msg13.src = membus;
     msg13.dest = dcache1;
     msg13.cmd = readres;
     msg12.addr = NDEF;
     lpn->insert_msg(msg13);
     
-    message_t msg14;
-    msg14.pre_cfg = (1<<15);
-    msg14.post_cfg = (1 << 16);
-    msg14.src = icache1;
-    msg14.dest = cpu1;
-    msg14.cmd = readres;
-    msg14.addr = NDEF;
-    lpn->insert_msg(msg14);
-    
-    
-    message_t msg15;
-    msg15.pre_cfg = (1<<1);
-    msg15.post_cfg = (1 << 17);
-    msg15.src = icache1;
-    msg15.dest = cpu1;
-    msg15.cmd = readres;
-    msg15.addr = NDEF;
-    lpn->insert_msg(msg15);
-    
     /**
-     message_t msg22;
-     msg22.pre_cfg = (1<<1);
-     msg22.post_cfg = (1<<19)|(1 << 18)|(1 <<20)|(1 << 21);
-     msg22.src = cache1;
-     msg22.dest = membus;
-     msg22.cmd = loadLockedreq;
-     msg22.addr = NDEF;
-     lpn->insert_msg(msg22);
+     message_t msg14;
+     msg14.pre_cfg = (1<<15);
+     msg14.post_cfg = (1 << 16);
+     msg14.src = icache1;
+     msg14.dest = cpu1;
+     msg14.cmd = readres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
      
-     message_t msg23;
-     msg23.pre_cfg = (1<<18);
-     msg23.post_cfg = (1<<22);
-     msg23.src = membus;
-     msg23.dest = cache0;
-     msg23.cmd = loadLockedreq;
-     msg23.addr = NDEF;
-     lpn->insert_msg(msg23);
-     
-     
-     message_t msg24;
-     msg24.pre_cfg = (1<<22);
-     msg24.post_cfg = (1<<25);
-     msg24.src = cache0;
-     msg24.dest = cpu0;
-     msg24.cmd = loadLockedreq;
-     msg24.addr = NDEF;
-     lpn->insert_msg(msg24);
-     
-     message_t msg25;
-     msg25.pre_cfg = (1<<19);
-     msg25.post_cfg = (1<<23);
-     msg25.src = membus;
-     msg25.dest = cache0;
-     msg25.cmd = loadLockedreq;
-     msg25.addr = NDEF;
-     lpn->insert_msg(msg25);
-     
-     message_t msg26;
-     msg26.pre_cfg = (1<<23);
-     msg26.post_cfg = (1<<26);
-     msg26.src = cache0;
-     msg26.dest = cpu0;
-     msg26.cmd = loadLockedreq;
-     msg26.addr = NDEF;
-     lpn->insert_msg(msg26);
-     
-     message_t msg27;
-     msg27.pre_cfg = (1<<20);
-     msg27.post_cfg = (1 << 24);
-     msg27.src = membus;
-     msg27.dest = cache1;
-     msg27.cmd = loadLockedreq;
-     msg27.addr = NDEF;
-     lpn->insert_msg(msg27);
-     
-     
-     message_t msg28;
-     msg28.pre_cfg = (1<<24);
-     msg28.post_cfg = (1<<27);
-     msg28.src = cache1;
-     msg28.dest = cpu1;
-     msg28.cmd = loadLockedreq;
-     msg28.addr = NDEF;
-     lpn->insert_msg(msg28);
-     
-     
-     message_t msg29;
-     msg29.pre_cfg = (1<<21);
-     msg29.post_cfg = (1<<28);
-     msg29.src = membus;
-     msg29.dest = mem;
-     msg29.cmd = loadLockedreq;
-     msg29.addr = NDEF;
-     lpn->insert_msg(msg29);
-     
-     message_t msg31;
-     msg31.pre_cfg = (1<<25)|(1<<26)|(1<<27)|(1<<28);
-     msg31.post_cfg = (1 << 29);
-     msg31.src = mem;
-     msg31.dest = membus;
-     msg31.cmd = readres;
-     msg31.addr = NDEF;
-     lpn->insert_msg(msg31);
-     
-     message_t msg32;
-     msg32.pre_cfg = (1<<25)|(1<<26)|(1<<27)|(1<<28);
-     msg32.post_cfg = (1 << 29);
-     msg32.src = cache0;
-     msg32.dest = membus;
-     msg32.cmd = readres;
-     msg32.addr = NDEF;
-     lpn->insert_msg(msg32);
-     
-     message_t msg33;
-     msg33.pre_cfg = (1<<29);
-     msg33.post_cfg = (1 << 30);
-     msg33.src = membus;
-     msg33.dest = cache1;
-     msg33.cmd = readres;
-     msg32.addr = NDEF;
-     lpn->insert_msg(msg33);
-     
-     message_t msg34;
-     msg34.pre_cfg = (1<<30);
-     msg34.post_cfg = (1 << 31);
-     msg34.src = cache1;
-     msg34.dest = cpu1;
-     msg34.cmd = readres;
-     msg34.addr = NDEF;
-     lpn->insert_msg(msg34);
-     
+     message_t msg15;
+     msg15.pre_cfg = (1<<1);
+     msg15.post_cfg = (1 << 17);
+     msg15.src = icache1;
+     msg15.dest = cpu1;
+     msg15.cmd = readres;
+     msg15.addr = NDEF;
+     lpn->insert_msg(msg15);
      **/
     
     lpn->set_init_cfg(1<<0);
     
     return lpn;
 }
+
 lpn_t* build_cpu0_dread(void){
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu0 read to dcache*******");
-    
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu0;
-    msg1.dest = dcache0;
-    msg1.cmd = readreq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-    
+    /**
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu0;
+     msg1.dest = dcache0;
+     msg1.cmd = readreq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg22;
-    msg22.pre_cfg = (1<<1);
+    msg22.pre_cfg = (1<<0);
     msg22.post_cfg = (1<<19)|(1 << 18)|(1 <<20)|(1 << 21);
     msg22.src = icache0;
     msg22.dest = membus;
@@ -1714,60 +1461,60 @@ lpn_t* build_cpu0_dread(void){
     
     message_t msg23;
     msg23.pre_cfg = (1<<18);
-    msg23.post_cfg = (1<<22);
+    msg23.post_cfg = (1<<25);
     msg23.src = membus;
     msg23.dest = icache1;
     msg23.cmd = loadLockedreq;
     msg23.addr = NDEF;
     lpn->insert_msg(msg23);
     
-    
-    message_t msg24;
-    msg24.pre_cfg = (1<<22);
-    msg24.post_cfg = (1<<25);
-    msg24.src = dcache1;
-    msg24.dest = cpu1;
-    msg24.cmd = loadLockedreq;
-    msg24.addr = NDEF;
-    lpn->insert_msg(msg24);
-    
+    /**
+     message_t msg24;
+     msg24.pre_cfg = (1<<22);
+     msg24.post_cfg = (1<<25);
+     msg24.src = dcache1;
+     msg24.dest = cpu1;
+     msg24.cmd = loadLockedreq;
+     msg24.addr = NDEF;
+     lpn->insert_msg(msg24);
+     **/
     message_t msg25;
     msg25.pre_cfg = (1<<19);
-    msg25.post_cfg = (1<<23);
+    msg25.post_cfg = (1<<26);
     msg25.src = membus;
     msg25.dest = dcache1;
     msg25.cmd = loadLockedreq;
     msg25.addr = NDEF;
     lpn->insert_msg(msg25);
-    
-    message_t msg26;
-    msg26.pre_cfg = (1<<23);
-    msg26.post_cfg = (1<<26);
-    msg26.src = icache1;
-    msg26.dest = cpu1;
-    msg26.cmd = loadLockedreq;
-    msg26.addr = NDEF;
-    lpn->insert_msg(msg26);
-    
+    /**
+     message_t msg26;
+     msg26.pre_cfg = (1<<23);
+     msg26.post_cfg = (1<<26);
+     msg26.src = icache1;
+     msg26.dest = cpu1;
+     msg26.cmd = loadLockedreq;
+     msg26.addr = NDEF;
+     lpn->insert_msg(msg26);
+     **/
     message_t msg27;
     msg27.pre_cfg = (1<<20);
-    msg27.post_cfg = (1 << 24);
+    msg27.post_cfg = (1 << 27);
     msg27.src = membus;
     msg27.dest = dcache0;
     msg27.cmd = loadLockedreq;
     msg27.addr = NDEF;
     lpn->insert_msg(msg27);
     
-    
-    message_t msg28;
-    msg28.pre_cfg = (1<<24);
-    msg28.post_cfg = (1<<27);
-    msg28.src = icache0;
-    msg28.dest = cpu0;
-    msg28.cmd = loadLockedreq;
-    msg28.addr = NDEF;
-    lpn->insert_msg(msg28);
-    
+    /**
+     message_t msg28;
+     msg28.pre_cfg = (1<<24);
+     msg28.post_cfg = (1<<27);
+     msg28.src = icache0;
+     msg28.dest = cpu0;
+     msg28.cmd = loadLockedreq;
+     msg28.addr = NDEF;
+     lpn->insert_msg(msg28);
+     **/
     
     message_t msg29;
     msg29.pre_cfg = (1<<21);
@@ -1798,33 +1545,34 @@ lpn_t* build_cpu0_dread(void){
     
     message_t msg33;
     msg33.pre_cfg = (1<<29);
-    msg33.post_cfg = (1 << 30);
+    msg33.post_cfg = (1 << 31);
     msg33.src = membus;
     msg33.dest = icache0;
     msg33.cmd = readres;
     msg32.addr = NDEF;
     lpn->insert_msg(msg33);
     
-    message_t msg34;
-    msg34.pre_cfg = (1<<30);
-    msg34.post_cfg = (1 << 31);
-    msg34.src = dcache0;
-    msg34.dest = cpu0;
-    msg34.cmd = readres;
-    msg34.addr = NDEF;
-    lpn->insert_msg(msg34);
-    
-    
-    message_t msg14;
-    msg14.pre_cfg = (1<<1);
-    msg14.post_cfg = (1 << 17);
-    msg14.src = dcache0;
-    msg14.dest = cpu0;
-    msg14.cmd = readres;
-    msg14.addr = NDEF;
-    lpn->insert_msg(msg14);
-    
-    
+    /**
+     message_t msg34;
+     msg34.pre_cfg = (1<<30);
+     msg34.post_cfg = (1 << 31);
+     msg34.src = dcache0;
+     msg34.dest = cpu0;
+     msg34.cmd = readres;
+     msg34.addr = NDEF;
+     lpn->insert_msg(msg34);
+     
+     
+     message_t msg14;
+     msg14.pre_cfg = (1<<1);
+     msg14.post_cfg = (1 << 17);
+     msg14.src = dcache0;
+     msg14.dest = cpu0;
+     msg14.cmd = readres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
+     
+     **/
     lpn->set_init_cfg(1<<0);
     return lpn;
 }
@@ -1832,29 +1580,19 @@ lpn_t* build_cpu1_dread(void){
     lpn_t* lpn = new lpn_t;
     
     lpn->set_flow_name("****cpu1 read to dcache*******");
-    
-    message_t msg1;
-    msg1.pre_cfg = (1<<0);
-    msg1.post_cfg = (1 << 1);
-    msg1.src = cpu1;
-    msg1.dest = dcache1;
-    msg1.cmd = readreq;
-    msg1.addr = NDEF;
-    lpn->insert_msg(msg1);
-    
-    
-    message_t msg15;
-    msg15.pre_cfg = (1<<1);
-    msg15.post_cfg = (1 << 17);
-    msg15.src = dcache1;
-    msg15.dest = cpu1;
-    msg15.cmd = readres;
-    msg15.addr = NDEF;
-    lpn->insert_msg(msg15);
-    
+    /**
+     message_t msg1;
+     msg1.pre_cfg = (1<<0);
+     msg1.post_cfg = (1 << 1);
+     msg1.src = cpu1;
+     msg1.dest = dcache1;
+     msg1.cmd = readreq;
+     msg1.addr = NDEF;
+     lpn->insert_msg(msg1);
+     **/
     
     message_t msg22;
-    msg22.pre_cfg = (1<<1);
+    msg22.pre_cfg = (1<<0);
     msg22.post_cfg = (1<<19)|(1 << 18)|(1 <<20)|(1 << 21);
     msg22.src = icache1;
     msg22.dest = membus;
@@ -1864,60 +1602,60 @@ lpn_t* build_cpu1_dread(void){
     
     message_t msg23;
     msg23.pre_cfg = (1<<18);
-    msg23.post_cfg = (1<<22);
+    msg23.post_cfg = (1<<25);
     msg23.src = membus;
     msg23.dest = icache0;
     msg23.cmd = loadLockedreq;
     msg23.addr = NDEF;
     lpn->insert_msg(msg23);
     
-    
-    message_t msg24;
-    msg24.pre_cfg = (1<<22);
-    msg24.post_cfg = (1<<25);
-    msg24.src = dcache0;
-    msg24.dest = cpu0;
-    msg24.cmd = loadLockedreq;
-    msg24.addr = NDEF;
-    lpn->insert_msg(msg24);
-    
+    /**
+     message_t msg24;
+     msg24.pre_cfg = (1<<22);
+     msg24.post_cfg = (1<<25);
+     msg24.src = dcache0;
+     msg24.dest = cpu0;
+     msg24.cmd = loadLockedreq;
+     msg24.addr = NDEF;
+     lpn->insert_msg(msg24);
+     **/
     message_t msg25;
     msg25.pre_cfg = (1<<19);
-    msg25.post_cfg = (1<<23);
+    msg25.post_cfg = (1<<26);
     msg25.src = membus;
     msg25.dest = dcache0;
     msg25.cmd = loadLockedreq;
     msg25.addr = NDEF;
     lpn->insert_msg(msg25);
-    
-    message_t msg26;
-    msg26.pre_cfg = (1<<23);
-    msg26.post_cfg = (1<<26);
-    msg26.src = icache0;
-    msg26.dest = cpu0;
-    msg26.cmd = loadLockedreq;
-    msg26.addr = NDEF;
-    lpn->insert_msg(msg26);
-    
+    /**
+     message_t msg26;
+     msg26.pre_cfg = (1<<23);
+     msg26.post_cfg = (1<<26);
+     msg26.src = icache0;
+     msg26.dest = cpu0;
+     msg26.cmd = loadLockedreq;
+     msg26.addr = NDEF;
+     lpn->insert_msg(msg26);
+     **/
     message_t msg27;
     msg27.pre_cfg = (1<<20);
-    msg27.post_cfg = (1 << 24);
+    msg27.post_cfg = (1 << 27);
     msg27.src = membus;
     msg27.dest = dcache1;
     msg27.cmd = loadLockedreq;
     msg27.addr = NDEF;
     lpn->insert_msg(msg27);
     
-    
-    message_t msg28;
-    msg28.pre_cfg = (1<<24);
-    msg28.post_cfg = (1<<27);
-    msg28.src = icache1;
-    msg28.dest = cpu1;
-    msg28.cmd = loadLockedreq;
-    msg28.addr = NDEF;
-    lpn->insert_msg(msg28);
-    
+    /**
+     message_t msg28;
+     msg28.pre_cfg = (1<<24);
+     msg28.post_cfg = (1<<27);
+     msg28.src = icache1;
+     msg28.dest = cpu1;
+     msg28.cmd = loadLockedreq;
+     msg28.addr = NDEF;
+     lpn->insert_msg(msg28);
+     **/
     
     message_t msg29;
     msg29.pre_cfg = (1<<21);
@@ -1948,28 +1686,36 @@ lpn_t* build_cpu1_dread(void){
     
     message_t msg33;
     msg33.pre_cfg = (1<<29);
-    msg33.post_cfg = (1 << 30);
+    msg33.post_cfg = (1 << 31);
     msg33.src = membus;
     msg33.dest = icache1;
     msg33.cmd = readres;
     msg32.addr = NDEF;
     lpn->insert_msg(msg33);
     
-    message_t msg34;
-    msg34.pre_cfg = (1<<30);
-    msg34.post_cfg = (1 << 31);
-    msg34.src = dcache1;
-    msg34.dest = cpu1;
-    msg34.cmd = readres;
-    msg34.addr = NDEF;
-    lpn->insert_msg(msg34);
-    
-    
-    
+    /**
+     message_t msg34;
+     msg34.pre_cfg = (1<<30);
+     msg34.post_cfg = (1 << 31);
+     msg34.src = dcache1;
+     msg34.dest = cpu1;
+     msg34.cmd = readres;
+     msg34.addr = NDEF;
+     lpn->insert_msg(msg34);
+     
+     
+     message_t msg14;
+     msg14.pre_cfg = (1<<1);
+     msg14.post_cfg = (1 << 17);
+     msg14.src = dcache1;
+     msg14.dest = cpu1;
+     msg14.cmd = readres;
+     msg14.addr = NDEF;
+     lpn->insert_msg(msg14);
+     
+     **/
     lpn->set_init_cfg(1<<0);
-    
     return lpn;
-    
 }
 lpn_t* build_cpu0_storefail(void){
     lpn_t* lpn = new lpn_t;
