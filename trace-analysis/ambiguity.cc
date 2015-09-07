@@ -602,6 +602,7 @@ int main(int argc, char *argv[]) {
         s_stack=dscen(s_stack);
         for(uint32_t ctt=0;ctt<s_stack.size();ctt++){
             scenario_t good_scen = s_stack.at(ctt);
+            cout<<"scenario "<<ctt<<" :"<<endl;
             print_scenario(flow_spec, good_scen);
             cout << endl;
         }

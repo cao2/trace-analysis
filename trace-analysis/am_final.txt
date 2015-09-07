@@ -1,0 +1,31 @@
+finished
+Info: read 121138 messages.
+************************
+dscen called, orig size1
+************************
+NEW size1
+0***  cpu0:dcache0:read:-  1
+
+0***  cpu0:dcache0:readreq:-  1
+
+0***  cpu0:dcache0:readres:-  1
+
+0***  cpu0:dcache0:writereq:-  1
+
+0***  cpu0:dcache0:writeres:-  1
+
+Info: cpu0:dcache0:read:- not matched, backtrack.
+
+***  Success -  the scenario that matches all messages is
+scenario 0 :
+***  # of flow instances:
+	****cpu0 write*******: 	0
+	****cpu0 read*******: 	0
+	****cpu1 write*******: 	0
+	****cpu1 read*******: 	0
+	****cpu0 read to dcache*******: 	0
+	****cpu1 read to dcache*******: 	0
+	****cpu0 storeCondfail******: 	0
+	****cpu1 storeCondfail******: 	0
+
+
