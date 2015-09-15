@@ -202,7 +202,8 @@ string cfg_str_c(const uint32_t& xcfg){
     return cfg_str;
 }
 int main(int argc, char *argv[]) {
-    
+    struct rusage r_usage;
+
     // Build flow specification
     vector<lpn_t*> flow_spec;
     vector<uint32_t> noneed_monitors;
@@ -548,6 +549,8 @@ int main(int argc, char *argv[]) {
             print_scenario(flow_spec, tmp_print);
             cout << endl;}
     }
+    getrusage(RUSAGE_SELF,&r_usage);
+    printf("************************Memory usage = %ld\n",r_usage.ru_maxrss);
     return 0;
     
 }

@@ -8,6 +8,8 @@
 #include <set>
 #include <algorithm>    // std::sort
 #include <math.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 // build a lpn model for each flow.
 lpn_t* build_msi_flow_v1(void);
 lpn_t* build_cpu0_read(void);
@@ -202,7 +204,7 @@ string cfg_str_c(const uint32_t& xcfg){
     return cfg_str;
 }
 int main(int argc, char *argv[]) {
-    
+    struct rusage r_usage;
     // Build flow specification
     vector<lpn_t*> flow_spec;
     vector<uint32_t> noneed_monitors;
@@ -345,8 +347,8 @@ int main(int argc, char *argv[]) {
                 new_msg.cmd = StoreCondFailreq;
             else if (tmp_str == "iFunc")
                 new_msg.cmd = iFunc ;
-            else if (tmp_str == "loadLocked")
-                new_msg.cmd = loadLocked;
+            else if (tmp_str == "uFunc")
+                new_msg.cmd = uFunc;
             
             else
                 throw std::invalid_argument("Unrecognized command " + tmp_str);
@@ -372,7 +374,7 @@ int main(int argc, char *argv[]) {
     
     vector<scenario_t> s_stack;
     stack<uint32_t> tri_stack;
-    
+    int maxsize=0;
     s_stack.push_back(scenario_t());
     tri_stack.push(0);
     
@@ -380,6 +382,7 @@ int main(int argc, char *argv[]) {
     
     // Matching message in the trace to scenairos.
     bool match = false;
+    int erromsg=0;
     while (tri_stack.size() != 0) {
         //for(uint32_t niuniu=0;niuniu<100;niuniu++){
         match=false;
@@ -434,22 +437,28 @@ int main(int argc, char *argv[]) {
             n_msg.cmd=readExreq;
             message_t m_msg=msg;
             m_msg.cmd=Upgradereq;
-            message_t x_msg=msg;
-            x_msg.cmd=storeCondreq;
+            
             message_t y_msg=msg;
             y_msg.cmd=Upgraderes;
             message_t z_msg=msg;
             z_msg.cmd=readExres;
+            
+            
+            msg_vec.push_back(n_msg);
+            msg_vec.push_back(m_msg);
+            msg_vec.push_back(y_msg);
+            msg_vec.push_back(z_msg);
+            
+
+        }
+        else if(msg.cmd==uFunc){
+            message_t x_msg=msg;
+            x_msg.cmd=storeCondreq;
             message_t g_msg=msg;
             g_msg.cmd=loadLockedreq;
             message_t f_msg=msg;
             f_msg.cmd=readres;
-            
-            msg_vec.push_back(n_msg);
-            msg_vec.push_back(m_msg);
             msg_vec.push_back(x_msg);
-            msg_vec.push_back(y_msg);
-            msg_vec.push_back(z_msg);
             msg_vec.push_back(g_msg);
             msg_vec.push_back(f_msg);
 
@@ -457,38 +466,7 @@ int main(int argc, char *argv[]) {
         else{
             cout<<"no such func"<<endl;
         }
-        /**
-        else if(msg.cmd==iFunc){
-            //include readExreq, readExres, Upgradereq, Upgraderes, StoreCondReq
-            message_t n_msg=msg;
-            n_msg.cmd=readExreq;
-            message_t m_msg=msg;
-            m_msg.cmd=Upgradereq;
-            message_t x_msg=msg;
-            x_msg.cmd=storeCondreq;
-            message_t y_msg=msg;
-            y_msg.cmd=Upgraderes;
-            message_t z_msg=msg;
-            z_msg.cmd=readExres;
-            
-            msg_vec.push_back(n_msg);
-            msg_vec.push_back(m_msg);
-            msg_vec.push_back(x_msg);
-            msg_vec.push_back(y_msg);
-            msg_vec.push_back(z_msg);
-
-        }
-        else if(msg.cmd==loadLocked){
-            message_t n_msg=msg;
-            n_msg.cmd=loadLockedreq;
-            message_t m_msg=msg;
-            m_msg.cmd=readres;
-            msg_vec.push_back(n_msg);
-            msg_vec.push_back(m_msg);
-
-        }
-       
-        **/
+        
         
         vector<scenario_t> new_s_stack;
         
@@ -496,7 +474,7 @@ int main(int argc, char *argv[]) {
         int yuting;
     for(yuting=0;yuting<msg_vec.size();yuting++){
         msg=msg_vec.at(yuting);
-        
+        bool tmpflag=false;
          cout << tri<<"***  " << msg.toString() <<"  "<< s_stack.size() <<endl << endl;
         //find out if new msg can create a new flow_inst
         for (uint32_t i = 0; i < flow_spec.size(); i++) {
@@ -546,6 +524,7 @@ int main(int argc, char *argv[]) {
                         new_scenario.active_t.at(i).cfg = new_cfg;
                     }
                     match = true;
+                    tmpflag=true;
                     new_s_stack.push_back(new_scenario);
                     tri_stack.push(tri+1);
                     //cout << "Info: " << msg.toString() << "\t\t (" << f.flow_inst->get_flow_name() << ", " << f.inst_id << ")." << endl << flush;
@@ -574,10 +553,13 @@ int main(int argc, char *argv[]) {
                     new_s_stack.push_back(new_scenario);
                     tri_stack.push(tri+1);
                     match = true;
+                    tmpflag=true;
                 }
             }
             
         }
+        if( tmpflag==false)
+            erromsg++;
     }
         if (match == false) {
             tri_stack.push(tri+1);
@@ -592,6 +574,8 @@ int main(int argc, char *argv[]) {
         }
         else{
             s_stack=new_s_stack;
+            if(s_stack.size()>maxsize)
+                maxsize=s_stack.size();
         }
         cout << "======================================" << endl;
     }
@@ -605,6 +589,8 @@ int main(int argc, char *argv[]) {
             print_scenario(flow_spec, good_scen);
             cout << endl;
         }
+        cout<<"max number of scenarios is "<<maxsize<<endl;
+        cout<<"total number of messge not matches: "<<erromsg<<endl;
     }
     
     else if (bad_scenario_vec.size()>0) {
@@ -620,6 +606,9 @@ int main(int argc, char *argv[]) {
             print_scenario(flow_spec, tmp_print);
             cout << endl;}
     }
+    getrusage(RUSAGE_SELF,&r_usage);
+    printf("************************Memory usage = %ld\n",r_usage.ru_maxrss);
+
     return 0;
     
 }
