@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
     
     ofstream errorfile;
     errorfile.open ("erromsg.txt",ios::trunc);
-    
+    int max=0;
     vector<message_t> trace;
     
     // Open input trace file
@@ -405,7 +405,8 @@ int main(int argc, char *argv[]) {
             
             cout<<"NEW size"<<s_stack.size()<<endl;
         }
-        
+        if(s_stack.size()>max)
+            max=s_stack.size();
         vector<scenario_t> tmp_s_stack=s_stack;
         message_t msg(trace.at(tri));
         cout << tri<<"***  " << msg.toString() <<"  "<< s_stack.size() <<endl << endl;
@@ -437,6 +438,7 @@ int main(int argc, char *argv[]) {
             n_msg.cmd=readExreq;
             message_t m_msg=msg;
             m_msg.cmd=Upgradereq;
+<<<<<<< Updated upstream
             
             message_t y_msg=msg;
             y_msg.cmd=Upgraderes;
@@ -449,6 +451,32 @@ int main(int argc, char *argv[]) {
             msg_vec.push_back(y_msg);
             msg_vec.push_back(z_msg);
             
+=======
+            message_t x_msg=msg;
+            x_msg.cmd=storeCondreq;
+            
+            message_t g_msg=msg;
+            g_msg.cmd=loadLockedreq;
+            message_t f_msg=msg;
+            f_msg.cmd=readres;
+            
+            msg_vec.push_back(n_msg);
+            msg_vec.push_back(m_msg);
+            msg_vec.push_back(x_msg);
+            
+            if(msg.src==membus&&(msg.dest==icache0||msg.dest==icache1));
+            else{
+                message_t y_msg=msg;
+                y_msg.cmd=Upgraderes;
+                message_t z_msg=msg;
+                z_msg.cmd=readExres;
+                msg_vec.push_back(y_msg);
+                msg_vec.push_back(z_msg);
+            }
+            
+            msg_vec.push_back(g_msg);
+            msg_vec.push_back(f_msg);
+>>>>>>> Stashed changes
 
         }
         else if(msg.cmd==uFunc){
@@ -589,9 +617,14 @@ int main(int argc, char *argv[]) {
             cout<<"scenario "<<ctt<<" :"<<endl;
             print_scenario(flow_spec, good_scen);
             cout << endl;
+            
         }
+<<<<<<< Updated upstream
         cout<<"max number of scenarios is "<<maxsize<<endl;
         cout<<"total number of messge not matches: "<<erromsg<<endl;
+=======
+        cout<<"max scenario size: "<<max<<endl;
+>>>>>>> Stashed changes
     }
     
     else if (bad_scenario_vec.size()>0) {
